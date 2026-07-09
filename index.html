@@ -575,6 +575,8 @@
       <span><i class="cal-dot" style="background:#DBEAFE;border:1px solid #93C5FD"></i>хор.</span>
       <span><i class="cal-dot" style="background:#FEF3C7;border:1px solid #FCD34D"></i>удовл.</span>
       <span><i class="cal-dot" style="background:#FCE7F3;border:1px solid #F9A8D4"></i>низкое</span>
+      <span>🏃/🏋️ тренировка</span>
+      <span>🍷 алкоголь</span>
     </div>
   </div>
 
@@ -1253,17 +1255,20 @@ function renderCalendar(){
     let bg = '';
     let icon = '';
     let dot = '';
+    const manual = loadManual(key);
+    const hasAlcohol = (rec && rec.alcohol && rec.alcohol.length) || (manual.alcohol && manual.alcohol.length);
     if (rec && rec.hasRealData) {
       bg = sleepLevel(rec.sleepScore).bg;
       if (rec.dayType === 'running') icon = '🏃';
       else if (rec.dayType === 'strength') icon = '🏋️';
-      if (rec.alcohol && rec.alcohol.length) dot = '<div class="cal-cell-dot"></div>';
     }
+    const alcoholIcon = hasAlcohol ? '🍷' : '';
     const classes = ['cal-cell'];
     if (isToday) classes.push('today');
     if (key === calSelectedKey) classes.push('selected');
+    const iconStr = (icon || alcoholIcon) ? `<span class="cal-cell-icon">${icon}${alcoholIcon}</span>` : '';
     cells += `<div class="${classes.join(' ')}" style="${bg?`background:${bg};`:''}" onclick="selectCalDay('${key}')">
-      ${dot}<span>${day}</span>${icon?`<span class="cal-cell-icon">${icon}</span>`:''}
+      <span>${day}</span>${iconStr}
     </div>`;
   }
   document.getElementById('calGrid').innerHTML = cells;
@@ -1311,7 +1316,7 @@ function renderCalDetail(key){
     : 'нет данных';
   const hrLbl = rec.hasRealData ? `${rec.restingHr} уд/мин` : 'нет данных';
   const stepsLbl = rec.hasRealData ? `${(rec.steps||0).toLocaleString('ru-RU')}` : 'нет данных';
-  const alcoholLbl = alcohol.length ? alcohol.map(a => ({wine:'🍷 Вино',beer:'🍺 Пиво',spirits:'🥃 Крепкий'}[a]||a)).join(', ') : '—';
+  const alcoholLbl = alcohol.length ? alcohol.map(a => ({wine:'🍷 Вино',beer:'🍺 Пиво',spirits:'🥃 Крепкий',cocktail:'🍹 Коктейль'}[a]||a)).join(', ') : '—';
 
   function chips(rowId, items, selected, multi=true) {
     return items.map(({val,label}) => {
@@ -1335,7 +1340,7 @@ function renderCalDetail(key){
 
       <div class="cal-input-title" style="margin-top:4px;">Алкоголь</div>
       <div class="cal-chip-row" id="cal-alcohol-${key}">
-        ${chips('alcohol', [{val:'wine',label:'🍷 Вино'},{val:'beer',label:'🍺 Пиво'},{val:'spirits',label:'🥃 Крепкий'}], alcohol)}
+        ${chips('alcohol', [{val:'wine',label:'🍷 Вино'},{val:'beer',label:'🍺 Пиво'},{val:'spirits',label:'🥃 Крепкий'},{val:'cocktail',label:'🍹 Коктейль'}], alcohol)}
       </div>
 
       <div class="cal-input-title">Тип дня</div>
