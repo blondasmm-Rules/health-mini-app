@@ -278,6 +278,16 @@
   .cal-detail-row:last-child{border-bottom:none;}
   .cal-detail-label{color:var(--muted);}
   .cal-detail-val{color:var(--ink);font-weight:600;}
+
+  /* Ввод в Календаре */
+  .cal-input-section{margin-top:12px;padding-top:12px;border-top:1px solid #F0EDFB;}
+  .cal-input-title{font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px;}
+  .cal-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .cal-chip{padding:5px 11px;border-radius:20px;border:1.5px solid #ECE4FB;background:#FAF8FF;color:var(--ink);font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+  .cal-chip.active{background:var(--purple-1);border-color:var(--purple-1);color:#fff;}
+  .cal-cycle-btn{padding:7px 14px;border-radius:10px;border:1.5px solid var(--purple-1);background:#F5F0FE;color:var(--purple-1);font-size:0.78rem;font-weight:700;cursor:pointer;}
+  .cal-cycle-btn.active{background:var(--purple-1);color:#fff;}
+  .cal-save-btn{width:100%;padding:10px;background:var(--purple-1);color:#fff;border:none;border-radius:12px;font-size:0.85rem;font-weight:700;cursor:pointer;margin-top:10px;box-shadow:0 2px 8px rgba(124,58,237,0.3);}
 </style>
 </head>
 <body>
@@ -1240,35 +1250,117 @@ function selectCalDay(key){
   renderCalendar();
 }
 
+// ── Ручные данные (localStorage) ─────────────────────────────────────────────
+function loadManual(key) {
+  try { return JSON.parse(localStorage.getItem('manual_' + key) || 'null') || {}; } catch(e) { return {}; }
+}
+function saveManual(key, data) {
+  localStorage.setItem('manual_' + key, JSON.stringify(data));
+}
+
 function renderCalDetail(key){
   const box = document.getElementById('calDetail');
-  if (!key || !HISTORY[key]) {
-    box.innerHTML = '<div class="metric-foot">Нет данных за этот день.</div>';
-    return;
-  }
-  const rec = HISTORY[key];
+  if (!key) { box.innerHTML = ''; return; }
+  const rec = HISTORY[key] || {};
+  const manual = loadManual(key);
   const d = parseKey(key);
   const dateLabel = `${d.getDate()} ${RU_MONTHS[d.getMonth()]}, ${RU_WEEKDAYS_FULL[d.getDay()]}`;
+
+  // Объединяем авто-данные и ручные
+  const alcohol = manual.alcohol || rec.alcohol || [];
+  const symptoms = manual.symptoms || [];
+  const manualWorkoutType = manual.workoutType || null;
+  const isCycleStart = manual.cycleStart || false;
 
   let workoutText = 'Отдых';
   if (rec.activities && rec.activities.length) {
     workoutText = rec.activities.map(a => a.type==='running' ? `${a.name} · ${a.km} км` : `${a.name} · ${a.sets} подходов`).join('; ');
   }
 
-  const sleepLbl = rec.hasRealData ? `${rec.sleepScore} (${sleepLevel(rec.sleepScore).label})` : 'нет данных';
+  const sleepLbl = rec.hasRealData
+    ? `${rec.sleep ? rec.sleep + ' ч · ' : ''}${rec.sleepScore} (${sleepLevel(rec.sleepScore).label})`
+    : 'нет данных';
   const hrLbl = rec.hasRealData ? `${rec.restingHr} уд/мин` : 'нет данных';
-  const alcoholLbl = (rec.alcohol && rec.alcohol.length)
-    ? rec.alcohol.map(a => ({wine:'Вино',beer:'Пиво',spirits:'Крепкий'}[a]||a)).join(', ')
-    : '—';
+  const stepsLbl = rec.hasRealData ? `${(rec.steps||0).toLocaleString('ru-RU')}` : 'нет данных';
+  const alcoholLbl = alcohol.length ? alcohol.map(a => ({wine:'🍷 Вино',beer:'🍺 Пиво',spirits:'🥃 Крепкий'}[a]||a)).join(', ') : '—';
+
+  function chips(rowId, items, selected, multi=true) {
+    return items.map(({val,label}) => {
+      const active = multi ? (selected||[]).includes(val) : selected===val;
+      return `<button class="cal-chip${active?' active':''}" onclick="calToggleChip('${key}','${rowId}','${val}',${multi})">${label}</button>`;
+    }).join('');
+  }
 
   box.innerHTML = `
-    <div class="cal-detail-date">${dateLabel}</div>
+    <div class="cal-detail-date">${dateLabel}${isCycleStart ? ' <span style="font-size:0.7rem;background:#FCE7F3;color:#BE185D;padding:2px 7px;border-radius:10px;font-weight:700;">🌸 Цикл</span>' : ''}</div>
+
     <div class="cal-detail-row"><span class="cal-detail-label">Тренировка</span><span class="cal-detail-val">${workoutText}</span></div>
     <div class="cal-detail-row"><span class="cal-detail-label">Сон</span><span class="cal-detail-val">${sleepLbl}</span></div>
     <div class="cal-detail-row"><span class="cal-detail-label">ЧСС в покое</span><span class="cal-detail-val">${hrLbl}</span></div>
+    <div class="cal-detail-row"><span class="cal-detail-label">Шаги</span><span class="cal-detail-val">${stepsLbl}</span></div>
     <div class="cal-detail-row"><span class="cal-detail-label">Вес</span><span class="cal-detail-val">${rec.weight!=null ? rec.weight.toFixed(1)+' кг' : 'нет данных'}</span></div>
     <div class="cal-detail-row"><span class="cal-detail-label">Алкоголь</span><span class="cal-detail-val">${alcoholLbl}</span></div>
+
+    <div class="cal-input-section">
+      <div class="cal-input-title">✏️ Добавить вручную</div>
+
+      <div class="cal-input-title" style="margin-top:4px;">Алкоголь</div>
+      <div class="cal-chip-row" id="cal-alcohol-${key}">
+        ${chips('alcohol', [{val:'wine',label:'🍷 Вино'},{val:'beer',label:'🍺 Пиво'},{val:'spirits',label:'🥃 Крепкий'}], alcohol)}
+      </div>
+
+      <div class="cal-input-title">Тип дня</div>
+      <div class="cal-chip-row" id="cal-workout-${key}">
+        ${chips('workoutType', [{val:'strength',label:'💪 Силовая'},{val:'running',label:'🏃 Бег'},{val:'rest',label:'😴 Отдых'}], manualWorkoutType, false)}
+      </div>
+
+      <div class="cal-input-title">Самочувствие</div>
+      <div class="cal-chip-row" id="cal-symptoms-${key}">
+        ${chips('symptoms', [{val:'bloating',label:'Вздутие'},{val:'cravings',label:'Тяга к сладкому'},{val:'mood',label:'Настроение↓'},{val:'cramps',label:'Судороги'}], symptoms)}
+      </div>
+
+      <div class="cal-input-title">Цикл</div>
+      <button class="cal-cycle-btn${isCycleStart?' active':''}" id="cal-cycle-${key}" onclick="calToggleCycle('${key}')">
+        ${isCycleStart ? '🌸 Начало цикла отмечено' : '🌸 Отметить начало цикла'}
+      </button>
+
+      <button class="cal-save-btn" onclick="calSave('${key}')">Сохранить</button>
+    </div>
   `;
+}
+
+function calToggleChip(dateKey, field, val, multi) {
+  const manual = loadManual(dateKey);
+  if (multi) {
+    const arr = manual[field] || [];
+    const idx = arr.indexOf(val);
+    if (idx >= 0) arr.splice(idx, 1); else arr.push(val);
+    manual[field] = arr;
+  } else {
+    manual[field] = manual[field] === val ? null : val;
+  }
+  saveManual(dateKey, manual);
+  renderCalDetail(dateKey);
+}
+
+function calToggleCycle(dateKey) {
+  const manual = loadManual(dateKey);
+  manual.cycleStart = !manual.cycleStart;
+  saveManual(dateKey, manual);
+  renderCalDetail(dateKey);
+}
+
+function calSave(dateKey) {
+  const manual = loadManual(dateKey);
+  // Если цикл — обновляем LAST_PERIOD в памяти
+  if (manual.cycleStart) {
+    const d = parseKey(dateKey);
+    // Отправить через Telegram WebApp если доступен
+  }
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.sendData(JSON.stringify({ type: 'manual', date: dateKey, ...manual }));
+  }
+  showToast('Сохранено ✓');
 }
 </script>
 </body>
