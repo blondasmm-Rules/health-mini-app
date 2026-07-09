@@ -679,8 +679,9 @@ const PHASE_META = {
 const today = new Date();
 const { cycleDay, phase } = getPhase(today);
 const tomorrow = new Date(today.getTime() + msDay);
-const isWorkoutDay = dayType(today) !== 'rest';
-const isTomorrowWorkout = dayType(tomorrow) !== 'rest';
+const isWorkoutDay = getEffectiveDayType(todayKey) !== 'rest';
+const tomorrowKey = dateKey(tomorrow);
+const isTomorrowWorkout = getEffectiveDayType(tomorrowKey) !== 'rest';
 
 const baseKcal = isWorkoutDay ? KCAL_TRAIN : KCAL_REST;
 let kcal = baseKcal + PHASE_BONUS[phase];
@@ -754,7 +755,7 @@ if (hasAdj) {
   document.getElementById('adjWrap').innerHTML = `<span class="adj-badge">скорректировано</span><div class="adj-reason">${reasons.join('; ')}. Жир пересчитан заново.</div>`;
 }
 
-const wType = dayType(today);
+const wType = getEffectiveDayType(todayKey);
 const wIcons = { strength:'🏋️‍♀️', running:'🏃‍♀️', rest:'🧘‍♀️' };
 document.getElementById('workoutIcon').textContent = wIcons[wType];
 document.getElementById('workoutName').textContent = workoutName(today);
@@ -791,7 +792,8 @@ const stripHtml = WEEK_ORDER.map(dow => {
   const d = new Date(today);
   const diff = dow - today.getDay();
   d.setDate(today.getDate() + diff);
-  const t = dayType(d);
+  const dKey = dateKey(d);
+  const t = getEffectiveDayType(dKey);
   const isToday = dow === today.getDay();
   return `<div class="day-col ${isToday?'today':''}">
       <div class="day-label">${WEEKDAYS[dow]}</div>
@@ -1292,6 +1294,13 @@ function saveManual(key, data) {
   localStorage.setItem('manual_' + key, JSON.stringify(data));
 }
 
+function getEffectiveDayType(key) {
+  const m = loadManual(key);
+  if (m.workoutType) return m.workoutType;
+  const d = parseKey(key);
+  return dayType(d);
+}
+
 function renderCalDetail(key){
   const box = document.getElementById('calDetail');
   if (!key) { box.innerHTML = ''; return; }
@@ -1394,7 +1403,12 @@ function calSave(dateKey) {
   if (window.Telegram && window.Telegram.WebApp) {
     window.Telegram.WebApp.sendData(JSON.stringify({ type: 'manual', date: dateKey, ...manual }));
   }
+  // Если изменился тип дня для сегодня или завтра — перезагружаем первый экран
+  const needsReload = (dateKey === todayKey || dateKey === tomorrowKey) && manual.workoutType;
   showToast('Сохранено ✓');
+  if (needsReload) {
+    setTimeout(() => { location.reload(); }, 800);
+  }
 }
 </script>
 </body>
