@@ -677,6 +677,7 @@ const PHASE_META = {
 
 // ---------- Расчёт: сегодня ----------
 const today = new Date();
+const todayKey = dateKey(today);
 const { cycleDay, phase } = getPhase(today);
 const tomorrow = new Date(today.getTime() + msDay);
 const isWorkoutDay = getEffectiveDayType(todayKey) !== 'rest';
