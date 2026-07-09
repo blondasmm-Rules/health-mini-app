@@ -288,6 +288,10 @@
   .cal-cycle-btn{padding:7px 14px;border-radius:10px;border:1.5px solid var(--purple-1);background:#F5F0FE;color:var(--purple-1);font-size:0.78rem;font-weight:700;cursor:pointer;}
   .cal-cycle-btn.active{background:var(--purple-1);color:#fff;}
   .cal-save-btn{width:100%;padding:10px;background:var(--purple-1);color:#fff;border:none;border-radius:12px;font-size:0.85rem;font-weight:700;cursor:pointer;margin-top:10px;box-shadow:0 2px 8px rgba(124,58,237,0.3);}
+  .refresh-btn{width:34px;height:34px;border-radius:11px;border:1.5px solid #ECE4FB;background:#FAF8FF;
+    color:var(--purple-1);font-size:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .refresh-btn.spinning{animation:spin 1s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -299,7 +303,10 @@
       <div class="greeting" id="greeting">Привет, Оля</div>
       <div class="date" id="dateLabel">—</div>
     </div>
-    <div class="avatar">🌸</div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="refresh-btn" id="refreshBtn" onclick="triggerRefresh()" title="Обновить данные">🔄</button>
+      <div class="avatar">🌸</div>
+    </div>
   </div>
 
   <div class="cycle-banner" id="cycleBanner">
@@ -587,6 +594,28 @@
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ── Кнопка обновления данных ──────────────────────────────────────────────────
+function triggerRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.sendData(JSON.stringify({type: 'refresh'}));
+    setTimeout(() => {
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+      showToast('Запрос отправлен ✓');
+    }, 2000);
+  } else {
+    // В браузере — просто показываем тост
+    setTimeout(() => {
+      btn.classList.remove('spinning');
+      btn.disabled = false;
+      showToast('Данные обновляются...');
+    }, 1500);
+  }
+}
 // ---------- Telegram Mini App init (безопасно, если запущено вне Telegram) ----------
 if (window.Telegram && window.Telegram.WebApp) {
   const tg = window.Telegram.WebApp;
