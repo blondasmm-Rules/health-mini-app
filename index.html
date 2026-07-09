@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Мой день</title>
+<style>
+  :root{
+    --purple-1:#7C3AED;
+    --purple-2:#C026D3;
+    --purple-deep:#4C1D95;
+    --ink:#1F2937;
+    --muted:#6B7280;
+    --card-bg:#FFFFFF;
+    --radius:22px;
+    --shadow:0 8px 24px rgba(124,58,237,0.12);
+    --phase-color:#8B5CF6;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(180deg,#EEF2FF 0%,#F5F3FF 40%,#FBF7FF 100%);
+    color:var(--ink);
+    min-height:100vh;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+  }
+  .app{
+    max-width:480px;
+    margin:0 auto;
+    padding:calc(16px + env(safe-area-inset-top)) 16px 16px;
+  }
+
+  /* Header */
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .greeting{font-size:1.3rem;font-weight:700;}
+  .date{font-size:0.85rem;color:var(--muted);margin-top:2px;}
+  .avatar{
+    width:44px;height:44px;border-radius:50%;
+    background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+    box-shadow:var(--shadow);
+  }
+
+  /* Cycle banner */
+  .cycle-banner{
+    background:linear-gradient(135deg,var(--phase-color),#A78BFA);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    color:white;
+    margin-bottom:14px;
+    box-shadow:var(--shadow);
+  }
+  .cycle-top{display:flex;justify-content:space-between;align-items:flex-start;}
+  .cycle-phase{font-size:1.05rem;font-weight:700;}
+  .cycle-day{font-size:0.8rem;opacity:0.9;margin-top:2px;}
+  .cycle-badge{
+    background:rgba(255,255,255,0.25);
+    border-radius:999px;padding:4px 10px;font-size:0.72rem;font-weight:600;
+    white-space:nowrap;
+  }
+  .cycle-desc{font-size:0.82rem;line-height:1.4;opacity:0.95;margin-top:8px;}
+  .cycle-progress{
+    height:6px;background:rgba(255,255,255,0.3);border-radius:999px;margin-top:12px;overflow:hidden;
+  }
+  .cycle-progress-fill{height:100%;background:white;border-radius:999px;}
+
+  /* Status chips */
+  .status-row{display:flex;gap:10px;margin-bottom:14px;}
+  .chip{
+    flex:1;background:var(--card-bg);border-radius:16px;padding:10px 12px;
+    box-shadow:var(--shadow);text-align:left;
+  }
+  .chip-label{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;}
+  .chip-value{font-size:0.92rem;font-weight:700;margin-top:3px;}
+  .chip-sub{font-size:0.7rem;color:var(--muted);margin-top:1px;}
+
+  /* Plan card */
+  .plan-card{
+    background:linear-gradient(160deg,#F6F2FF 0%,#FFFFFF 55%);
+    border:1px solid #ECE4FB;
+    border-radius:var(--radius);
+    padding:20px;color:var(--ink);margin-bottom:14px;
+    box-shadow:var(--shadow);
+  }
+  .plan-title{font-size:0.8rem;color:var(--purple-1);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+  .plan-kcal-row{display:flex;align-items:baseline;gap:8px;margin-top:6px;}
+  .plan-kcal{font-size:2.4rem;font-weight:800;color:var(--purple-1);}
+  .plan-kcal-unit{font-size:0.95rem;color:var(--muted);}
+  .adj-badge{
+    display:inline-block;margin-top:6px;background:#F3EEFF;color:var(--purple-1);
+    border-radius:999px;padding:3px 10px;font-size:0.68rem;font-weight:600;
+  }
+  .adj-reason{font-size:0.74rem;color:var(--muted);margin-top:6px;line-height:1.4;}
+
+  .macro-grid{display:flex;gap:10px;margin-top:16px;}
+  .macro{
+    flex:1;background:#F5F2FF;border-radius:14px;padding:10px 8px;text-align:center;
+  }
+  .macro-val{font-size:1.05rem;font-weight:700;color:var(--ink);}
+  .macro-label{font-size:0.68rem;color:var(--muted);margin-top:2px;}
+
+  .workout-row{
+    display:flex;align-items:center;gap:12px;margin-top:16px;
+    background:#F5F2FF;border-radius:14px;padding:10px 12px;
+  }
+  .workout-icon{
+    width:38px;height:38px;border-radius:12px;background:#EDE4FF;
+    display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;
+  }
+  .workout-name{font-size:0.9rem;font-weight:700;color:var(--ink);}
+  .workout-type{font-size:0.72rem;color:var(--muted);}
+
+  .intensity-banner{
+    margin-top:12px;border-radius:14px;background:#F5F2FF;
+    border-left:4px solid var(--purple-1);
+    padding:10px 12px 10px 14px;font-size:0.8rem;line-height:1.4;color:var(--ink);
+  }
+  .intensity-label{font-weight:700;font-size:0.78rem;margin-bottom:2px;display:block;color:var(--purple-1);}
+
+  .steps-goal-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:0.78rem;color:var(--muted);}
+
+  /* Weekly schedule strip */
+  .section-title{font-size:0.85rem;font-weight:700;margin:4px 0 8px;color:var(--ink);}
+  .week-strip{
+    display:flex;justify-content:space-between;gap:6px;background:var(--card-bg);
+    border-radius:var(--radius);padding:12px 10px;box-shadow:var(--shadow);margin-bottom:14px;
+  }
+  .day-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;}
+  .day-label{font-size:0.68rem;color:var(--muted);font-weight:600;}
+  .day-icon{
+    width:34px;height:34px;border-radius:11px;background:#F3F0FF;
+    display:flex;align-items:center;justify-content:center;font-size:1rem;
+  }
+  .day-col.today .day-icon{
+    background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    color:white;box-shadow:0 4px 10px rgba(124,58,237,0.4);
+  }
+  .day-col.today .day-label{color:var(--purple-1);}
+  .today-dot{width:4px;height:4px;border-radius:50%;background:var(--purple-1);}
+
+  /* Yesterday card */
+  .yesterday-card{
+    background:var(--card-bg);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;
+  }
+  .yesterday-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .yesterday-title{font-size:0.9rem;font-weight:700;}
+  .yesterday-workout{font-size:0.75rem;color:var(--muted);}
+
+  .rings-row{display:flex;justify-content:space-between;gap:8px;}
+  .ring-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .ring-value{font-size:0.85rem;font-weight:700;margin-top:2px;color:var(--ink);}
+  .ring-label{font-size:0.68rem;color:var(--muted);}
+
+  .nutri-row{
+    display:flex;justify-content:space-between;margin-top:16px;padding-top:14px;
+    border-top:1px solid #F0EDFB;
+  }
+  .nutri-item{text-align:center;flex:1;}
+  .nutri-val{font-size:0.88rem;font-weight:700;}
+  .nutri-label{font-size:0.66rem;color:var(--muted);margin-top:2px;}
+
+  /* Bottom nav */
+  .bottom-nav{
+    position:fixed;left:0;right:0;bottom:0;
+    background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);
+    border-top:1px solid #ECE7FB;
+    padding:8px 16px calc(8px + env(safe-area-inset-bottom));
+    display:flex;justify-content:space-around;
+  }
+  .nav-item{
+    display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;
+    color:var(--muted);font-size:0.64rem;font-weight:600;
+    padding:6px 4px;border-radius:12px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .nav-item.active{color:var(--purple-1);background:#F3EEFF;}
+  .nav-icon{font-size:1.2rem;}
+
+  .toast{
+    position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:white;padding:8px 16px;border-radius:999px;font-size:0.78rem;
+    opacity:0;transition:all 0.25s ease;pointer-events:none;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* Summary screen */
+  .period-toggle{display:flex;background:#F1EDFC;border-radius:14px;padding:4px;margin-bottom:14px;gap:4px;}
+  .toggle-btn{
+    flex:1;border:none;background:transparent;padding:8px 0;border-radius:11px;
+    font-size:0.78rem;font-weight:600;color:var(--muted);
+  }
+  .toggle-btn.active{background:var(--card-bg);color:var(--purple-1);box-shadow:0 2px 6px rgba(124,58,237,0.15);}
+
+  .metric-card{
+    background:var(--card-bg);border-radius:var(--radius);padding:14px 16px;
+    box-shadow:var(--shadow);margin-bottom:12px;
+  }
+  .metric-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;}
+  .metric-title{font-size:0.85rem;font-weight:700;color:var(--ink);}
+  .metric-delta{font-size:0.76rem;color:var(--muted);font-weight:600;}
+  .chart-wrap{width:100%;}
+  .metric-foot{font-size:0.72rem;color:var(--muted);margin-top:6px;}
+
+  .meas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .meas-cell{background:#F5F2FF;border-radius:14px;padding:10px 12px;}
+  .meas-zone{font-size:0.68rem;color:var(--muted);font-weight:600;}
+  .meas-val{font-size:1rem;font-weight:700;color:var(--ink);margin-top:2px;}
+  .meas-delta{font-size:0.72rem;font-weight:700;margin-top:2px;}
+
+  .wgroup-title{font-size:0.75rem;font-weight:700;color:var(--purple-1);margin:10px 0 6px;text-transform:uppercase;letter-spacing:0.03em;}
+  .wlist-item{
+    display:flex;align-items:center;gap:10px;background:var(--card-bg);
+    border-radius:14px;padding:10px 12px;margin-bottom:8px;box-shadow:var(--shadow);
+  }
+  .wlist-icon{
+    width:34px;height:34px;border-radius:11px;background:#F5F2FF;
+    display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;
+  }
+  .wlist-name{font-size:0.85rem;font-weight:700;color:var(--ink);}
+  .wlist-sub{font-size:0.72rem;color:var(--muted);}
+  .wlist-delta{font-size:0.72rem;color:var(--purple-1);font-weight:600;margin-top:2px;}
+
+  /* Экран ввода */
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip-select{
+    border:1.5px solid #ECE4FB;background:#FAF8FF;color:var(--ink);
+    padding:8px 12px;border-radius:999px;font-size:0.78rem;font-weight:600;
+  }
+  .chip-select.active{background:var(--purple-1);border-color:var(--purple-1);color:#fff;}
+
+  .field-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+  .field-row:first-child{margin-top:0;}
+  .field-label{font-size:0.82rem;color:var(--ink);font-weight:600;}
+  .field-input{
+    border:1.5px solid #ECE4FB;background:#FAF8FF;border-radius:10px;
+    padding:7px 10px;font-size:0.85rem;width:130px;text-align:right;color:var(--ink);
+  }
+
+  .stepper{display:flex;align-items:center;gap:10px;}
+  .stepper-btn{
+    width:30px;height:30px;border-radius:9px;border:1.5px solid #ECE4FB;background:#FAF8FF;
+    color:var(--purple-1);font-size:1.1rem;font-weight:700;line-height:1;
+  }
+  #waterVal{font-size:0.9rem;font-weight:700;min-width:16px;text-align:center;}
+
+  .save-btn{
+    width:100%;background:linear-gradient(135deg,var(--purple-1),var(--purple-2));
+    color:#fff;border:none;border-radius:16px;padding:14px;font-size:0.95rem;font-weight:700;
+    box-shadow:0 8px 20px rgba(124,58,237,0.3);margin-top:4px;
+  }
+
+  /* Календарь */
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cal-nav-btn{
+    width:34px;height:34px;border-radius:11px;border:1.5px solid #ECE4FB;background:#FAF8FF;
+    color:var(--purple-1);font-size:1.1rem;font-weight:700;
+  }
+  .cal-month-label{font-size:0.95rem;font-weight:700;color:var(--ink);}
+  .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:0.66rem;color:var(--muted);font-weight:600;margin-bottom:6px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .cal-cell{
+    aspect-ratio:1;border-radius:10px;background:#F3F0FF;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;position:relative;font-size:0.72rem;font-weight:700;color:var(--ink);
+  }
+  .cal-cell.empty{background:transparent;}
+  .cal-cell.today{box-shadow:0 0 0 2px var(--purple-1) inset;}
+  .cal-cell.selected{box-shadow:0 0 0 2px var(--purple-2) inset;}
+  .cal-cell-icon{font-size:0.62rem;margin-top:1px;}
+  .cal-cell-dot{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#D4537E;}
+  .cal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:0.66rem;color:var(--muted);}
+  .cal-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+  .cal-detail-date{font-size:0.9rem;font-weight:700;color:var(--purple-1);margin-bottom:8px;}
+  .cal-detail-row{display:flex;justify-content:space-between;font-size:0.8rem;padding:6px 0;border-bottom:1px solid #F0EDFB;}
+  .cal-detail-row:last-child{border-bottom:none;}
+  .cal-detail-label{color:var(--muted);}
+  .cal-detail-val{color:var(--ink);font-weight:600;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div id="view-today">
+  <div class="header">
+    <div>
+      <div class="greeting" id="greeting">Привет, Оля</div>
+      <div class="date" id="dateLabel">—</div>
+    </div>
+    <div class="avatar">🌸</div>
+  </div>
+
+  <div class="cycle-banner" id="cycleBanner">
+    <div class="cycle-top">
+      <div>
+        <div class="cycle-phase" id="phaseName">—</div>
+        <div class="cycle-day" id="cycleDayText">—</div>
+      </div>
+      <div class="cycle-badge" id="energyBadge">—</div>
+    </div>
+    <div class="cycle-desc" id="phaseDesc">—</div>
+    <div class="cycle-progress"><div class="cycle-progress-fill" id="cycleProgressFill"></div></div>
+  </div>
+
+  <div class="status-row">
+    <div class="chip">
+      <div class="chip-label">Цель</div>
+      <div class="chip-value">Снижение</div>
+      <div class="chip-sub" id="weightSub">—</div>
+    </div>
+    <div class="chip">
+      <div class="chip-label">Вес</div>
+      <div class="chip-value" id="weightVal">—</div>
+      <div class="chip-sub">→ 61.0 кг</div>
+    </div>
+    <div class="chip">
+      <div class="chip-label">Энергия</div>
+      <div class="chip-value" id="recoveryVal">—</div>
+      <div class="chip-sub" id="recoverySub">recovery</div>
+    </div>
+  </div>
+
+  <div class="plan-card">
+    <div class="plan-title">План на сегодня</div>
+    <div class="plan-kcal-row">
+      <div class="plan-kcal" id="planKcal">—</div>
+      <div class="plan-kcal-unit">ккал</div>
+    </div>
+    <div id="adjWrap"></div>
+
+    <div class="macro-grid">
+      <div class="macro"><div class="macro-val" id="macroProtein">—</div><div class="macro-label">Белок, г</div></div>
+      <div class="macro"><div class="macro-val" id="macroFat">—</div><div class="macro-label">Жир, г</div></div>
+      <div class="macro"><div class="macro-val" id="macroCarbs">—</div><div class="macro-label">Углеводы, г</div></div>
+    </div>
+
+    <div class="workout-row">
+      <div class="workout-icon" id="workoutIcon">—</div>
+      <div>
+        <div class="workout-name" id="workoutName">—</div>
+        <div class="workout-type" id="workoutType">—</div>
+      </div>
+    </div>
+
+    <div class="intensity-banner" id="intensityBanner">
+      <span class="intensity-label" id="intensityLabel">—</span>
+      <span id="intensityText">—</span>
+    </div>
+
+    <div class="steps-goal-row">
+      <span>Цель по шагам</span>
+      <strong id="stepsGoal">—</strong>
+    </div>
+  </div>
+
+  <div class="section-title">Расписание недели</div>
+  <div class="week-strip" id="weekStrip"></div>
+
+  <div class="yesterday-card">
+    <div class="yesterday-head">
+      <div class="yesterday-title">Вчера</div>
+      <div class="yesterday-workout" id="yWorkout">—</div>
+    </div>
+
+    <div class="rings-row" id="ringsRow"></div>
+
+    <div class="nutri-row">
+      <div class="nutri-item"><div class="nutri-val" id="yKcal">—</div><div class="nutri-label">ккал</div></div>
+      <div class="nutri-item"><div class="nutri-val" id="yProtein">—</div><div class="nutri-label">белок</div></div>
+      <div class="nutri-item"><div class="nutri-val" id="yFat">—</div><div class="nutri-label">жир</div></div>
+      <div class="nutri-item"><div class="nutri-val" id="yCarbs">—</div><div class="nutri-label">углеводы</div></div>
+    </div>
+  </div>
+
+</div><!-- /view-today -->
+
+<div id="view-summary" style="display:none">
+
+  <div class="header">
+    <div>
+      <div class="greeting">Сводка</div>
+      <div class="date" id="summaryRangeLabel">—</div>
+    </div>
+  </div>
+
+  <div class="period-toggle">
+    <button class="toggle-btn active" id="periodWeekBtn" onclick="setPeriod('week')">Неделя</button>
+    <button class="toggle-btn" id="periodMonthBtn" onclick="setPeriod('month')">Месяц</button>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-head">
+      <span class="metric-title">Вес</span>
+      <span class="metric-delta" id="weightDeltaLabel">—</span>
+    </div>
+    <div class="chart-wrap" id="weightChartWrap"></div>
+    <div class="metric-foot" id="weightFoot">—</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-head">
+      <span class="metric-title">Замеры тела</span>
+      <span class="metric-delta">с начала трека</span>
+    </div>
+    <div id="measurementsTable"></div>
+  </div>
+
+  <div class="section-title">Тренировки</div>
+  <div class="period-toggle">
+    <button class="toggle-btn active" id="wmodeChronoBtn" onclick="setWorkoutMode('chrono')">Хронология</button>
+    <button class="toggle-btn" id="wmodePhaseBtn" onclick="setWorkoutMode('phase')">По фазе цикла</button>
+  </div>
+  <div id="workoutsList"></div>
+
+  <div class="metric-card">
+    <div class="metric-head">
+      <span class="metric-title">Шаги</span>
+      <span class="metric-delta" id="stepsAvgLabel">—</span>
+    </div>
+    <div class="chart-wrap" id="stepsChartWrap"></div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-head">
+      <span class="metric-title">Калории</span>
+      <span class="metric-delta" id="kcalAvgLabel">—</span>
+    </div>
+    <div class="chart-wrap" id="kcalChartWrap"></div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-head">
+      <span class="metric-title">Белок</span>
+      <span class="metric-delta" id="proteinAvgLabel">—</span>
+    </div>
+    <div class="chart-wrap" id="proteinChartWrap"></div>
+  </div>
+
+</div><!-- /view-summary -->
+
+<div id="view-input" style="display:none">
+
+  <div class="header">
+    <div>
+      <div class="greeting">Ввод данных</div>
+      <div class="date" id="inputDateLabel">—</div>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title" style="margin-bottom:10px;">Тренировка сегодня</div>
+    <div class="chip-row" id="workoutTypeRow">
+      <button class="chip-select" data-val="strength">🏋️ Силовая</button>
+      <button class="chip-select" data-val="running">🏃 Бег</button>
+      <button class="chip-select" data-val="walk">🚶 Прогулка</button>
+      <button class="chip-select" data-val="yoga">🧘 Йога/растяжка</button>
+      <button class="chip-select" data-val="none">❌ Не было</button>
+    </div>
+    <div class="metric-title" style="margin:14px 0 8px;">Самочувствие (RPE)</div>
+    <div class="chip-row" id="rpeRow">
+      <button class="chip-select" data-val="1">😌 Легко</button>
+      <button class="chip-select" data-val="2">🙂 Норм</button>
+      <button class="chip-select" data-val="3">😐 Средне</button>
+      <button class="chip-select" data-val="4">😓 Тяжело</button>
+      <button class="chip-select" data-val="5">🥵 Очень тяжело</button>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title" style="margin-bottom:10px;">Вес и замеры</div>
+    <div class="field-row">
+      <label class="field-label">Вес, кг</label>
+      <input type="number" step="0.1" class="field-input" id="inWeight" placeholder="62.5">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Грудь, см</label>
+      <input type="number" step="0.1" class="field-input" id="inBust" placeholder="необязательно">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Под грудью, см</label>
+      <input type="number" step="0.1" class="field-input" id="inUnderbust" placeholder="необязательно">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Талия, см</label>
+      <input type="number" step="0.1" class="field-input" id="inWaist" placeholder="необязательно">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Живот, см</label>
+      <input type="number" step="0.1" class="field-input" id="inBelly" placeholder="необязательно">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Ягодицы, см</label>
+      <input type="number" step="0.1" class="field-input" id="inGlutes" placeholder="необязательно">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Прав. бедро, см</label>
+      <input type="number" step="0.1" class="field-input" id="inThighR" placeholder="необязательно">
+    </div>
+    <div class="field-row">
+      <label class="field-label">Лев. бедро, см</label>
+      <input type="number" step="0.1" class="field-input" id="inThighL" placeholder="необязательно">
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title" style="margin-bottom:10px;">Цикл</div>
+    <div class="field-row">
+      <label class="field-label">Начало цикла</label>
+      <input type="date" class="field-input" id="inCycleDate">
+    </div>
+    <button class="toggle-btn" style="margin-top:8px;background:#F5F2FF;color:var(--purple-1);font-weight:700;" onclick="setCycleToday()">Сегодня</button>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-title" style="margin-bottom:10px;">Самочувствие сегодня</div>
+    <div class="chip-row" id="symptomsRow">
+      <button class="chip-select" data-val="bloating">Вздутие</button>
+      <button class="chip-select" data-val="cravings">Тяга к сладкому</button>
+      <button class="chip-select" data-val="mood">Настроение ↓</button>
+      <button class="chip-select" data-val="cramps">Судороги</button>
+    </div>
+    <div class="metric-title" style="margin:14px 0 8px;">Алкоголь</div>
+    <div class="chip-row" id="alcoholRow">
+      <button class="chip-select" data-val="wine">🍷 Вино</button>
+      <button class="chip-select" data-val="beer">🍺 Пиво</button>
+      <button class="chip-select" data-val="spirits">🥃 Крепкий</button>
+    </div>
+  </div>
+
+  <button class="save-btn" onclick="saveInput()">Сохранить</button>
+
+</div><!-- /view-input -->
+
+<div id="view-calendar" style="display:none">
+
+  <div class="header">
+    <div>
+      <div class="greeting">Календарь</div>
+      <div class="date">тренировка, сон, ЧСС в покое, алкоголь</div>
+    </div>
+  </div>
+
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="shiftMonth(-1)">‹</button>
+    <div class="cal-month-label" id="calMonthLabel">—</div>
+    <button class="cal-nav-btn" onclick="shiftMonth(1)">›</button>
+  </div>
+
+  <div class="metric-card">
+    <div class="cal-weekdays">
+      <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-legend">
+      <span><i class="cal-dot" style="background:#DCFCE7"></i>сон отл.</span>
+      <span><i class="cal-dot" style="background:#DBEAFE"></i>хор.</span>
+      <span><i class="cal-dot" style="background:#FEF3C7"></i>удовл.</span>
+      <span><i class="cal-dot" style="background:#FDE2E2"></i>низкое</span>
+    </div>
+  </div>
+
+  <div class="metric-card" id="calDetail"></div>
+
+</div><!-- /view-calendar -->
+
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-item active" id="navToday" onclick="switchView('today')"><div class="nav-icon">☀️</div>Сегодня</div>
+  <div class="nav-item" id="navSummary" onclick="switchView('summary')"><div class="nav-icon">📊</div>Сводка</div>
+  <div class="nav-item" id="navCalendar" onclick="switchView('calendar')"><div class="nav-icon">📅</div>Календарь</div>
+  <div class="nav-item" id="navInput" onclick="switchView('input')"><div class="nav-icon">✏️</div>Ввод</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---------- Telegram Mini App init (безопасно, если запущено вне Telegram) ----------
+if (window.Telegram && window.Telegram.WebApp) {
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+}
+
+// ---------- Константы из DASHBOARD_STRUCTURE.md (разделы 3-7) ----------
+const LAST_PERIOD  = new Date(2026, 5, 5);
+const CYCLE_LEN    = 26;
+const PROTEIN      = 130;
+const KCAL_TRAIN   = 2020;
+const KCAL_REST    = 1870;
+const PHASE_BONUS  = { menstrual: -50, follicular: 0, ovulation: 50, luteal: 100 };
+const GOAL_WEIGHT  = 61.0;
+const msDay = 86400000;
+
+// ---------- "Вчера" (2026-07-08): kcal/protein/fat/carbs/weight из хендоффа (FatSecret/ручной ввод,
+// Garmin их не считает), steps/sleep/sleepScore/stress/restingHr подтянуты живьём из Garmin Connect ----------
+const Y = { kcal:2060, protein:150, fat:122, carbs:107, steps:15963, sleep:8.02, sleepScore:98, stress:27, restingHr:51, weight:62.5 };
+
+const WEEKDAYS = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const WEEK_ORDER = [1,2,3,4,5,6,0]; // Пн..Вс
+
+function getPhase(date){
+  const daysSince = Math.floor((stripTime(date) - stripTime(LAST_PERIOD)) / msDay);
+  const cycleDay = ((daysSince % CYCLE_LEN) + CYCLE_LEN) % CYCLE_LEN + 1;
+  let phase;
+  if (cycleDay <= 5) phase = 'menstrual';
+  else if (cycleDay <= 13) phase = 'follicular';
+  else if (cycleDay <= 16) phase = 'ovulation';
+  else phase = 'luteal';
+  return { cycleDay, phase };
+}
+function stripTime(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+function dayType(date){
+  const dow = date.getDay();
+  if ([3,5,0].includes(dow)) return 'strength';
+  if ([1,4].includes(dow)) return 'running';
+  return 'rest';
+}
+function workoutName(date){
+  const dow = date.getDay();
+  const t = dayType(date);
+  if (t === 'strength') return (dow===3 || dow===0) ? 'Ягодицы · Спина' : 'Ягодицы · Плечи';
+  if (t === 'running') return 'Бег';
+  return 'Активный отдых';
+}
+
+const PHASE_META = {
+  menstrual:  { name:'Менструальная',  color:'#F43F5E', badge:'Восстановление', desc:'Тело восстанавливается — приоритет мягкая нагрузка, больше отдыха и сна.' },
+  follicular: { name:'Фолликулярная',  color:'#8B5CF6', badge:'Энергия растёт', desc:'Энергия и работоспособность растут — хорошее время для темповых тренировок и силовых пиков.' },
+  ovulation:  { name:'Овуляция',       color:'#EC4899', badge:'Пик силы',       desc:'Пик силы и выносливости — можно закладывать самые интенсивные тренировки цикла.' },
+  luteal:     { name:'Лютеиновая',     color:'#6366F1', badge:'Береги силы', desc:'Восстановление медленнее — снижай интенсивность и следи за сном и тягой к сладкому.' }
+};
+
+// ---------- Расчёт: сегодня ----------
+const today = new Date();
+const { cycleDay, phase } = getPhase(today);
+const tomorrow = new Date(today.getTime() + msDay);
+const isWorkoutDay = dayType(today) !== 'rest';
+const isTomorrowWorkout = dayType(tomorrow) !== 'rest';
+
+const baseKcal = isWorkoutDay ? KCAL_TRAIN : KCAL_REST;
+let kcal = baseKcal + PHASE_BONUS[phase];
+let carbs = isTomorrowWorkout ? 75 : 50;
+let fat = Math.round((kcal - PROTEIN*4 - carbs*4) / 9);
+
+// -- шаг 2: корректировка по вчерашним фактам (упрощённо, один уровень назад) --
+const yPhaseInfo = getPhase(new Date(today.getTime() - msDay));
+const yBaseKcal = (dayType(new Date(today.getTime()-msDay)) !== 'rest' ? KCAL_TRAIN : KCAL_REST) + PHASE_BONUS[yPhaseInfo.phase];
+const kcalDiff = Y.kcal - yBaseKcal;
+
+let adjKcal = kcal;
+if (kcalDiff > 400) adjKcal = kcal - Math.min(350, Math.round(kcalDiff*0.45));
+else if (kcalDiff < -400) adjKcal = kcal + Math.min(150, Math.round(Math.abs(kcalDiff)*0.30));
+
+let adjCarbs = carbs;
+if (Y.carbs > 100) adjCarbs = Math.max(30, carbs - 25);
+else if (Y.carbs > 80) adjCarbs = Math.max(45, carbs - 10);
+
+const adjFat = Math.max(50, Math.round((adjKcal - PROTEIN*4 - adjCarbs*4) / 9));
+const adjProtein = (Y.protein < 110) ? PROTEIN + 5 : PROTEIN;
+
+const hasAdj = (adjKcal !== kcal) || (adjCarbs !== carbs);
+
+// -- recovery score --
+let recoveryScore = 100;
+if (Y.sleep < 6) recoveryScore -= 40; else if (Y.sleep < 7) recoveryScore -= 20; else if (Y.sleep >= 8) recoveryScore += 5;
+if (Y.sleepScore < 50) recoveryScore -= 25; else if (Y.sleepScore < 70) recoveryScore -= 10; else if (Y.sleepScore > 85) recoveryScore += 10;
+if (Y.stress > 70) recoveryScore -= 20; else if (Y.stress > 50) recoveryScore -= 10; else if (Y.stress < 26) recoveryScore += 5;
+recoveryScore = Math.max(0, Math.min(100, recoveryScore));
+
+let intensityMod = (phase==='menstrual' || phase==='luteal') ? -1 : 1;
+if (recoveryScore < 55) intensityMod = Math.min(intensityMod, -1);
+else if (recoveryScore >= 85) {
+  const canGoFull = phase !== 'luteal' && phase !== 'menstrual';
+  intensityMod = Math.max(intensityMod, canGoFull ? 1 : 0);
+}
+
+const needExtraSteps = kcalDiff > 150 || Y.carbs > 100;
+const greatRecovery = recoveryScore >= 80;
+const stepsGoalToday = (needExtraSteps || greatRecovery) ? 12000 : 10000;
+
+// ---------- Рендер ----------
+const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const RU_WEEKDAYS_FULL = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+document.getElementById('dateLabel').textContent = `${RU_WEEKDAYS_FULL[today.getDay()]}, ${today.getDate()} ${RU_MONTHS[today.getMonth()]}`;
+
+const pm = PHASE_META[phase];
+document.getElementById('cycleBanner').style.setProperty('--phase-color', pm.color);
+document.documentElement.style.setProperty('--phase-color', pm.color);
+document.getElementById('phaseName').textContent = pm.name;
+document.getElementById('cycleDayText').textContent = `День цикла ${cycleDay} из ${CYCLE_LEN}`;
+document.getElementById('energyBadge').textContent = pm.badge;
+document.getElementById('phaseDesc').textContent = pm.desc;
+document.getElementById('cycleProgressFill').style.width = Math.round(cycleDay/CYCLE_LEN*100) + '%';
+
+document.getElementById('weightVal').textContent = Y.weight.toFixed(1) + ' кг';
+document.getElementById('weightSub').textContent = `осталось ${(Y.weight-GOAL_WEIGHT).toFixed(1)} кг`;
+document.getElementById('recoveryVal').textContent = recoveryScore >= 80 ? 'Высокая' : (recoveryScore>=55?'Средняя':'Низкая');
+document.getElementById('recoverySub').textContent = `recovery ${recoveryScore}`;
+
+document.getElementById('planKcal').textContent = adjKcal;
+document.getElementById('macroProtein').textContent = adjProtein;
+document.getElementById('macroFat').textContent = adjFat;
+document.getElementById('macroCarbs').textContent = adjCarbs;
+
+if (hasAdj) {
+  const reasons = [];
+  if (Y.carbs > 100) reasons.push(`вчера много углеводов (${Y.carbs} г) → сегодня понижены до ${adjCarbs} г`);
+  if (adjKcal !== kcal) reasons.push(`вчерашний факт калорий скорректировал план на ${adjKcal - kcal > 0 ? '+' : ''}${adjKcal - kcal} ккал`);
+  document.getElementById('adjWrap').innerHTML = `<span class="adj-badge">скорректировано</span><div class="adj-reason">${reasons.join('; ')}. Жир пересчитан заново.</div>`;
+}
+
+const wType = dayType(today);
+const wIcons = { strength:'🏋️‍♀️', running:'🏃‍♀️', rest:'🧘‍♀️' };
+document.getElementById('workoutIcon').textContent = wIcons[wType];
+document.getElementById('workoutName').textContent = workoutName(today);
+document.getElementById('workoutType').textContent = wType==='strength' ? 'Силовая тренировка' : (wType==='running' ? 'Кардио / бег' : 'День отдыха');
+
+const bannerClass = intensityMod === 1 ? 'intensity-green' : (intensityMod === -1 ? 'intensity-yellow' : 'intensity-blue');
+document.getElementById('intensityBanner').classList.add(bannerClass);
+const labelText = intensityMod === 1 ? '🔥 Полная нагрузка' : (intensityMod === -1 ? '⚠️ Снизить нагрузку' : '👍 Тренировка по плану');
+document.getElementById('intensityLabel').textContent = labelText;
+
+let intensityText = '';
+if (wType === 'running') {
+  intensityText = intensityMod === 1
+    ? 'Отличное восстановление и текущая фаза — можно бежать в полную силу, задать темп или дистанцию выше обычного.'
+    : intensityMod === -1
+      ? 'Снизь темп, беги в зоне 2, не гонись за дистанцией.'
+      : 'Бежать в обычном темпе, ориентируйся на самочувствие.';
+} else if (wType === 'strength') {
+  intensityText = intensityMod === 1
+    ? 'Отличный день — можно работать на полную, пробовать рабочие веса выше обычного.'
+    : intensityMod === -1
+      ? 'Снизь рабочие веса на 20–30%, отдых между подходами длиннее.'
+      : 'Тренировка по плану, всё в норме.';
+} else {
+  intensityText = needExtraSteps
+    ? 'Вчера был перебор по углеводам/калориям — сегодня цель по шагам повышена.'
+    : (intensityMod === -1 ? 'Лёгкая прогулка, без давления на результат.' : 'Активное восстановление в своём темпе.');
+}
+document.getElementById('intensityText').textContent = intensityText;
+document.getElementById('stepsGoal').textContent = stepsGoalToday.toLocaleString('ru-RU');
+
+// weekly schedule strip
+const stripHtml = WEEK_ORDER.map(dow => {
+  const d = new Date(today);
+  const diff = dow - today.getDay();
+  d.setDate(today.getDate() + diff);
+  const t = dayType(d);
+  const isToday = dow === today.getDay();
+  return `<div class="day-col ${isToday?'today':''}">
+      <div class="day-label">${WEEKDAYS[dow]}</div>
+      <div class="day-icon">${wIcons[t]}</div>
+      ${isToday ? '<div class="today-dot"></div>' : ''}
+    </div>`;
+}).join('');
+document.getElementById('weekStrip').innerHTML = stripHtml;
+
+// yesterday workout label
+document.getElementById('yWorkout').textContent = workoutName(new Date(today.getTime()-msDay));
+
+// rings (шаги / сон / recovery)
+function ring(percent, color, icon, value, label){
+  const r = 26, c = 2*Math.PI*r;
+  const offset = c - Math.min(percent,100)/100*c;
+  return `<div class="ring-item">
+    <svg width="64" height="64" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="${r}" fill="none" stroke="#EDE9FE" stroke-width="7"/>
+      <circle cx="32" cy="32" r="${r}" fill="none" stroke="${color}" stroke-width="7"
+        stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
+        transform="rotate(-90 32 32)"/>
+      <text x="32" y="37" text-anchor="middle" font-size="16">${icon}</text>
+    </svg>
+    <div class="ring-value">${value}</div>
+    <div class="ring-label">${label}</div>
+  </div>`;
+}
+document.getElementById('ringsRow').innerHTML =
+  ring(Y.steps/12000*100, '#7C3AED', '👣', Y.steps.toLocaleString('ru-RU'), 'Шаги') +
+  ring(Y.sleepScore, '#C026D3', '🌙', Y.sleepScore, 'Сон') +
+  ring(recoveryScore, '#EC4899', '⚡', recoveryScore, 'Энергия');
+
+document.getElementById('yKcal').textContent = Y.kcal;
+document.getElementById('yProtein').textContent = Y.protein+'г';
+document.getElementById('yFat').textContent = Y.fat+'г';
+document.getElementById('yCarbs').textContent = Y.carbs+'г';
+
+// toast
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+// ---------- Экран «Сводка» ----------
+// Живьём подтянуто из Garmin Connect (Занятия / Шаги / Сон / Переживание стресса, 4 недели):
+// шаги, сон, показатель сна и стресс — реальные за 2026-06-12…2026-07-08, тренировки (бег/силовая)
+// с реальным темпом/дистанцией/пульсом. Вес и КБЖУ Garmin не считает (вес — ручное взвешивание,
+// КБЖУ — FatSecret) — эти два поля пока сгенерированы (кроме дня 2026-07-08, он реальный из хендоффа).
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry32(20260709);
+function dateKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function parseKey(k){ const [y,m,dd] = k.split('-').map(Number); return new Date(y, m-1, dd); }
+
+const REAL_DAILY = {
+  '2026-06-12': {steps:14882, sleep:6.35, sleepScore:41, stress:46, restingHr:60},
+  '2026-06-13': {steps:13564, sleep:8.98, sleepScore:85, stress:28, restingHr:58},
+  '2026-06-14': {steps:11185, sleep:11.03, sleepScore:51, stress:36, restingHr:58},
+  '2026-06-15': {steps:22484, sleep:8.42, sleepScore:99, stress:20, restingHr:55},
+  '2026-06-16': {steps:19842, sleep:8.72, sleepScore:90, stress:21, restingHr:56},
+  '2026-06-17': {steps:11574, sleep:7.40, sleepScore:87, stress:29, restingHr:58},
+  '2026-06-18': {steps:10584, sleep:6.28, sleepScore:77, stress:43, restingHr:59},
+  '2026-06-19': {steps:18749, sleep:8.32, sleepScore:59, stress:35, restingHr:61},
+  '2026-06-20': {steps:14561, sleep:8.00, sleepScore:83, stress:29, restingHr:57},
+  '2026-06-21': {steps:20007, sleep:7.57, sleepScore:87, stress:32, restingHr:54},
+  '2026-06-22': {steps:15226, sleep:7.08, sleepScore:76, stress:29, restingHr:58},
+  '2026-06-23': {steps:20698, sleep:8.20, sleepScore:89, stress:28, restingHr:57},
+  '2026-06-24': {steps:17267, sleep:8.22, sleepScore:99, stress:26, restingHr:56},
+  '2026-06-25': {steps:15345, sleep:6.50, sleepScore:63, stress:35, restingHr:55},
+  '2026-06-26': {steps:15407, sleep:7.63, sleepScore:58, stress:31, restingHr:59},
+  '2026-06-27': {steps:22518, sleep:7.92, sleepScore:88, stress:24, restingHr:56},
+  '2026-06-28': {steps:13801, sleep:9.05, sleepScore:81, stress:23, restingHr:58},
+  '2026-06-29': {steps:21324, sleep:7.48, sleepScore:86, stress:22, restingHr:59},
+  '2026-06-30': {steps:11233, sleep:7.10, sleepScore:78, stress:27, restingHr:60},
+  '2026-07-01': {steps:11022, sleep:9.18, sleepScore:88, stress:24, restingHr:55},
+  '2026-07-02': {steps:11059, sleep:8.63, sleepScore:78, stress:30, restingHr:62},
+  '2026-07-03': {steps:16541, sleep:7.40, sleepScore:81, stress:25, restingHr:58},
+  '2026-07-04': {steps:19283, sleep:7.85, sleepScore:87, stress:24, restingHr:55},
+  '2026-07-05': {steps:12364, sleep:8.12, sleepScore:92, stress:19, restingHr:52},
+  '2026-07-06': {steps:20069, sleep:8.02, sleepScore:88, stress:30, restingHr:55},
+  '2026-07-07': {steps:14369, sleep:7.97, sleepScore:94, stress:30, restingHr:58},
+  '2026-07-08': {steps:15963, sleep:8.02, sleepScore:98, stress:27, restingHr:51}
+};
+
+const REAL_ACTIVITY = {
+  '2026-06-15': [{type:'strength', name:'Силовая тренировка', sets:36, time:'1:19:19', hr:120, hrMax:160, kcal:414}],
+  '2026-06-16': [{type:'running', name:'Анивский район - Темповая тренировка', km:3.41, time:'24:02', pace:'7:03', hr:149, elev:46}],
+  '2026-06-17': [{type:'strength', name:'Силовая тренировка', sets:29, time:'1:14:00', hr:133, hrMax:169, kcal:468}],
+  '2026-06-20': [{type:'strength', name:'Силовая тренировка', sets:28, time:'1:11:06', hr:127, hrMax:166, kcal:429}],
+  '2026-06-21': [{type:'running', name:'Thalang - Базовая выносливость', km:5.19, time:'37:09', pace:'7:10', hr:153, elev:13}],
+  '2026-06-22': [{type:'strength', name:'Силовая тренировка', sets:31, time:'1:17:47', hr:129, hrMax:160, kcal:490}],
+  '2026-06-24': [{type:'running', name:'Thalang - Базовая выносливость', km:5.78, time:'42:00', pace:'7:16', hr:148, elev:13}],
+  '2026-06-25': [{type:'strength', name:'Силовая тренировка', sets:31, time:'1:24:47', hr:115, hrMax:161, kcal:390}],
+  '2026-06-27': [{type:'running', name:'Thalang - Базовая выносливость', km:6.19, time:'42:39', pace:'6:53', hr:149, elev:12}],
+  '2026-07-01': [{type:'strength', name:'Силовая тренировка', sets:28, time:'1:03:56', hr:122, hrMax:158, kcal:365}],
+  '2026-07-04': [{type:'running', name:'Thalang - Базовая выносливость', km:5.11, time:'35:10', pace:'6:53', hr:147, elev:12}],
+  '2026-07-05': [{type:'strength', name:'Силовая тренировка', sets:35, time:'1:26:34', hr:117, hrMax:167, kcal:414}],
+  '2026-07-06': [{type:'running', name:'Thalang - Кардиовыносливость', km:6.09, time:'40:33', pace:'6:40', hr:155, elev:15}],
+  '2026-07-08': [{type:'strength', name:'Силовая тренировка', sets:36, time:'1:28:27', hr:129, hrMax:166, kcal:524}],
+  '2026-07-09': [{type:'running', name:'Thalang Бег', km:6.15, time:'41:21', pace:'6:43', hr:156, elev:11}]
+};
+// Лог алкоголя по дням (из Экрана 3) — пока пуст: сохранение ввода ещё не подключено к боту,
+// поэтому реальной истории нет. Структура готова принять данные, когда появится бэкенд.
+const ALCOHOL_LOG = {};
+function paceToSec(p){ const [m,s]=p.split(':').map(Number); return m*60+s; }
+const RUN_ENTRIES = Object.keys(REAL_ACTIVITY).filter(k=>REAL_ACTIVITY[k].some(a=>a.type==='running')).sort();
+function runDelta(key){
+  const idx = RUN_ENTRIES.indexOf(key);
+  if (idx <= 0) return null;
+  const prevKey = RUN_ENTRIES[idx-1];
+  const cur = REAL_ACTIVITY[key].find(a=>a.type==='running');
+  const prev = REAL_ACTIVITY[prevKey].find(a=>a.type==='running');
+  return { diffSec: paceToSec(prev.pace) - paceToSec(cur.pace), prevPace: prev.pace, prevDate: prevKey };
+}
+function formatShortDate(k){ const d = parseKey(k); return `${d.getDate()} ${RU_MONTHS[d.getMonth()]}`; }
+
+const HIST_DAYS = 30;
+const HISTORY = {};
+{
+  const endDate = new Date(today.getTime() - msDay); // вчера
+  for (let i = HIST_DAYS - 1; i >= 0; i--) {
+    const d = new Date(endDate.getTime() - i*msDay);
+    const key = dateKey(d);
+    const { phase: pPhase } = getPhase(d);
+    const t = dayType(d);
+    const real = REAL_DAILY[key];
+    const activities = REAL_ACTIVITY[key] || [];
+    const recDayType = real
+      ? (activities.some(a=>a.type==='running') ? 'running' : (activities.some(a=>a.type==='strength') ? 'strength' : 'rest'))
+      : t;
+    const progress = 1 - i/(HIST_DAYS-1);
+    const weight = 64.6 - progress*(64.6-62.5) + (rand()-0.5)*0.3;
+    const baseK = (t!=='rest' ? KCAL_TRAIN : KCAL_REST) + PHASE_BONUS[pPhase];
+    const dayKcal = baseK + Math.round((rand()-0.5)*300);
+    const dayProtein = Math.round(120 + rand()*35);
+    const dayCarbs = Math.round((t!=='rest'?55:40) + rand()*35);
+    const dayFat = Math.max(50, Math.round((dayKcal - dayProtein*4 - dayCarbs*4)/9));
+    const stepsBase = t==='running' ? 14000 : t==='strength' ? 10000 : 8500;
+    const daySteps = real ? real.steps : Math.round(stepsBase + rand()*6000);
+    const daySleep = real ? real.sleep : +(6.2 + rand()*2.1).toFixed(2);
+    const daySleepScore = real ? real.sleepScore : Math.round(55 + rand()*44);
+    const dayStress = real ? real.stress : Math.round(5 + rand()*40);
+    const dayRestingHr = real ? real.restingHr : Math.round(56 + rand()*8);
+    HISTORY[key] = {
+      kcal: dayKcal, protein: dayProtein, fat: dayFat, carbs: dayCarbs,
+      steps: daySteps, sleep: daySleep, sleepScore: daySleepScore, stress: dayStress, restingHr: dayRestingHr,
+      weight: +weight.toFixed(1), phase: pPhase, dayType: recDayType, activities,
+      hasRealData: !!real, alcohol: ALCOHOL_LOG[key] || []
+    };
+  }
+  const yKey = dateKey(endDate);
+  HISTORY[yKey] = { ...Y, phase: yPhaseInfo.phase, dayType: dayType(endDate), activities: REAL_ACTIVITY[yKey] || [], hasRealData: true, alcohol: ALCOHOL_LOG[yKey] || [] };
+}
+const HIST_DATES = Object.keys(HISTORY).sort();
+function lastNDates(n){ return HIST_DATES.slice(-n); }
+
+function barChart(values, color, goal){
+  const w = 300, h = 64, n = values.length;
+  const max = Math.max(...values, goal||0) * 1.15 || 1;
+  const slot = w/n, bw = slot*0.55;
+  const bars = values.map((v,i)=>{
+    const x = i*slot + (slot-bw)/2;
+    const bh = Math.max(2, (v/max)*h);
+    const y = h-bh;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${color}"/>`;
+  }).join('');
+  const goalLine = goal ? `<line x1="0" y1="${(h-(goal/max)*h).toFixed(1)}" x2="${w}" y2="${(h-(goal/max)*h).toFixed(1)}" stroke="#C4B5FD" stroke-width="1.5" stroke-dasharray="4 3"/>` : '';
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">${goalLine}${bars}</svg>`;
+}
+
+function lineChart(values, color){
+  const w = 300, h = 64, n = values.length;
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max-min) || 1;
+  const pts = values.map((v,i)=>{
+    const x = n>1 ? (i/(n-1))*w : w/2;
+    const y = h - ((v-min)/range)*(h-8) - 4;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  const lastX = n>1 ? w : w/2;
+  const lastY = h - ((values[values.length-1]-min)/range)*(h-8) - 4;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="3.5" fill="${color}"/>
+  </svg>`;
+}
+
+let currentPeriod = 'week';
+let currentWorkoutMode = 'chrono';
+
+function renderSummary(){
+  const n = currentPeriod === 'week' ? 7 : 30;
+  const dates = lastNDates(n);
+  const rows = dates.map(k => HISTORY[k]);
+
+  const firstDate = parseKey(dates[0]);
+  const lastDate = parseKey(dates[dates.length-1]);
+  document.getElementById('summaryRangeLabel').textContent =
+    `${firstDate.getDate()} ${RU_MONTHS[firstDate.getMonth()]} — ${lastDate.getDate()} ${RU_MONTHS[lastDate.getMonth()]}`;
+
+  const weights = rows.map(r=>r.weight);
+  const wStart = weights[0], wEnd = weights[weights.length-1];
+  document.getElementById('weightChartWrap').innerHTML = lineChart(weights, '#7C3AED');
+  document.getElementById('weightDeltaLabel').textContent = `${(wEnd-wStart)<=0?'':'+'}${(wEnd-wStart).toFixed(1)} кг`;
+  document.getElementById('weightFoot').textContent = `${wStart.toFixed(1)} → ${wEnd.toFixed(1)} кг, цель ${GOAL_WEIGHT.toFixed(1)} кг`;
+
+  const steps = rows.map(r=>r.steps);
+  document.getElementById('stepsChartWrap').innerHTML = barChart(steps, '#7C3AED', 10000);
+  const stepsAvg = Math.round(steps.reduce((a,b)=>a+b,0)/steps.length);
+  document.getElementById('stepsAvgLabel').textContent = `в среднем ${stepsAvg.toLocaleString('ru-RU')}`;
+
+  const kcals = rows.map(r=>r.kcal);
+  document.getElementById('kcalChartWrap').innerHTML = barChart(kcals, '#C026D3', KCAL_REST);
+  const kcalAvg = Math.round(kcals.reduce((a,b)=>a+b,0)/kcals.length);
+  document.getElementById('kcalAvgLabel').textContent = `в среднем ${kcalAvg} ккал`;
+
+  const proteins = rows.map(r=>r.protein);
+  document.getElementById('proteinChartWrap').innerHTML = barChart(proteins, '#EC4899', PROTEIN);
+  const proteinAvg = Math.round(proteins.reduce((a,b)=>a+b,0)/proteins.length);
+  document.getElementById('proteinAvgLabel').textContent = `в среднем ${proteinAvg} г`;
+
+  renderWorkouts(dates);
+}
+
+function renderWorkouts(dates){
+  const workoutDays = dates.filter(k => HISTORY[k].dayType !== 'rest').slice().reverse();
+  const listEl = document.getElementById('workoutsList');
+  if (workoutDays.length === 0) { listEl.innerHTML = '<div class="metric-foot">Тренировок за период не было.</div>'; return; }
+
+  if (currentWorkoutMode === 'chrono') {
+    listEl.innerHTML = workoutDays.map(k => wItem(k)).join('');
+  } else {
+    const groups = {};
+    workoutDays.forEach(k => {
+      const ph = HISTORY[k].phase;
+      (groups[ph] = groups[ph] || []).push(k);
+    });
+    const order = ['menstrual','follicular','ovulation','luteal'];
+    listEl.innerHTML = order.filter(p=>groups[p]).map(p =>
+      `<div class="wgroup-title">${PHASE_META[p].name} · ${groups[p].length}</div>` +
+      groups[p].map(k => wItem(k)).join('')
+    ).join('');
+  }
+}
+
+function wItem(k){
+  const d = parseKey(k);
+  const row = HISTORY[k];
+  const dateLabel = `${d.getDate()} ${RU_MONTHS[d.getMonth()]}`;
+
+  if (row.activities && row.activities.length) {
+    return row.activities.map(a => activityRow(k, a, dateLabel)).join('');
+  }
+  // фолбэк для дней без реальных данных Garmin (за пределами подтянутого месяца)
+  const icon = wIcons[row.dayType];
+  const name = workoutName(d);
+  return `<div class="wlist-item">
+    <div class="wlist-icon">${icon}</div>
+    <div>
+      <div class="wlist-name">${name}</div>
+      <div class="wlist-sub">${dateLabel} · ${row.steps.toLocaleString('ru-RU')} шагов</div>
+    </div>
+  </div>`;
+}
+
+function activityRow(k, a, dateLabel){
+  if (a.type === 'running') {
+    const delta = runDelta(k);
+    let deltaHtml = '';
+    if (delta) {
+      const absSec = Math.abs(delta.diffSec);
+      deltaHtml = delta.diffSec === 0
+        ? `<div class="wlist-delta">темп как в прошлый раз (${delta.prevPace}/км)</div>`
+        : `<div class="wlist-delta">на ${absSec} с/км ${delta.diffSec>0?'быстрее':'медленнее'}, чем ${formatShortDate(delta.prevDate)} (${delta.prevPace}/км)</div>`;
+    }
+    return `<div class="wlist-item">
+      <div class="wlist-icon">${wIcons.running}</div>
+      <div>
+        <div class="wlist-name">${a.name}</div>
+        <div class="wlist-sub">${dateLabel} · ${a.km} км · ${a.pace}/км · ${a.hr} уд/мин</div>
+        ${deltaHtml}
+      </div>
+    </div>`;
+  }
+  return `<div class="wlist-item">
+    <div class="wlist-icon">${wIcons.strength}</div>
+    <div>
+      <div class="wlist-name">${a.name}</div>
+      <div class="wlist-sub">${dateLabel} · ${a.sets} подходов · ${a.hr} уд/мин (макс ${a.hrMax}) · ${a.kcal} ккал</div>
+    </div>
+  </div>`;
+}
+
+function setPeriod(p){
+  currentPeriod = p;
+  document.getElementById('periodWeekBtn').classList.toggle('active', p==='week');
+  document.getElementById('periodMonthBtn').classList.toggle('active', p==='month');
+  renderSummary();
+}
+function setWorkoutMode(m){
+  currentWorkoutMode = m;
+  document.getElementById('wmodeChronoBtn').classList.toggle('active', m==='chrono');
+  document.getElementById('wmodePhaseBtn').classList.toggle('active', m==='phase');
+  renderWorkouts(lastNDates(currentPeriod==='week'?7:30));
+}
+
+function switchView(view){
+  document.getElementById('view-today').style.display = view==='today' ? '' : 'none';
+  document.getElementById('view-summary').style.display = view==='summary' ? '' : 'none';
+  document.getElementById('view-calendar').style.display = view==='calendar' ? '' : 'none';
+  document.getElementById('view-input').style.display = view==='input' ? '' : 'none';
+  document.getElementById('navToday').classList.toggle('active', view==='today');
+  document.getElementById('navSummary').classList.toggle('active', view==='summary');
+  document.getElementById('navCalendar').classList.toggle('active', view==='calendar');
+  document.getElementById('navInput').classList.toggle('active', view==='input');
+  if (view === 'calendar' && !calendarInitialized) { calendarInitialized = true; renderCalendar(); }
+}
+
+// Замеры тела — периодически (не каждый день), поэтому не завязаны на неделя/месяц:
+// просто текущее значение и дельта от старта трека. Взято из твоих актуальных данных.
+const MEASUREMENTS = [
+  {zone:'Талия', current:71, delta:-2.0},
+  {zone:'Живот', current:82, delta:-3.0},
+  {zone:'Грудь', current:84, delta:-4.0},
+  {zone:'Под грудью', current:74, delta:-1.0},
+  {zone:'Ягодицы', current:100, delta:-1.0},
+  {zone:'Пр. бедро', current:56.6, delta:-1.9},
+  {zone:'Лев. бедро', current:null, delta:null}
+];
+function renderMeasurements(){
+  const cells = MEASUREMENTS.map(m => {
+    const valText = m.current!=null ? `${m.current} см` : '—';
+    let deltaHtml = '<div class="meas-delta" style="color:var(--muted)">нет данных</div>';
+    if (m.delta != null) {
+      const color = m.delta < 0 ? '#15803D' : (m.delta > 0 ? '#B45309' : 'var(--muted)');
+      deltaHtml = `<div class="meas-delta" style="color:${color}">${m.delta>0?'+':''}${m.delta.toFixed(1)} см</div>`;
+    }
+    return `<div class="meas-cell">
+      <div class="meas-zone">${m.zone}</div>
+      <div class="meas-val">${valText}</div>
+      ${deltaHtml}
+    </div>`;
+  }).join('');
+  document.getElementById('measurementsTable').innerHTML = `<div class="meas-grid">${cells}</div>`;
+}
+renderMeasurements();
+
+renderSummary();
+
+// ---------- Экран «Ввод данных» ----------
+document.getElementById('inputDateLabel').textContent =
+  `${RU_WEEKDAYS_FULL[today.getDay()]}, ${today.getDate()} ${RU_MONTHS[today.getMonth()]}`;
+document.getElementById('inWeight').value = Y.weight;
+document.getElementById('inBust').value = 84;
+document.getElementById('inUnderbust').value = 74;
+document.getElementById('inWaist').value = 71;
+document.getElementById('inBelly').value = 82;
+document.getElementById('inGlutes').value = 100;
+document.getElementById('inThighR').value = 56.6;
+document.getElementById('inCycleDate').value = dateKey(LAST_PERIOD);
+
+function setupChipRow(rowId, multi){
+  const row = document.getElementById(rowId);
+  row.querySelectorAll('.chip-select').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!multi) row.querySelectorAll('.chip-select').forEach(b => b.classList.remove('active'));
+      btn.classList.toggle('active');
+    });
+  });
+}
+setupChipRow('workoutTypeRow', false);
+setupChipRow('rpeRow', false);
+setupChipRow('symptomsRow', true);
+setupChipRow('alcoholRow', true);
+
+function setCycleToday(){
+  document.getElementById('inCycleDate').value = dateKey(today);
+}
+
+function saveInput(){
+  const getActive = rowId => {
+    const el = document.getElementById(rowId).querySelector('.chip-select.active');
+    return el ? el.dataset.val : null;
+  };
+  const symptoms = Array.from(document.getElementById('symptomsRow').querySelectorAll('.chip-select.active')).map(b=>b.dataset.val);
+  const alcohol = Array.from(document.getElementById('alcoholRow').querySelectorAll('.chip-select.active')).map(b=>b.dataset.val);
+  const payload = {
+    date: dateKey(today),
+    workoutType: getActive('workoutTypeRow'),
+    rpe: getActive('rpeRow'),
+    weight: parseFloat(document.getElementById('inWeight').value) || null,
+    bust: parseFloat(document.getElementById('inBust').value) || null,
+    underbust: parseFloat(document.getElementById('inUnderbust').value) || null,
+    waist: parseFloat(document.getElementById('inWaist').value) || null,
+    belly: parseFloat(document.getElementById('inBelly').value) || null,
+    glutes: parseFloat(document.getElementById('inGlutes').value) || null,
+    thighR: parseFloat(document.getElementById('inThighR').value) || null,
+    thighL: parseFloat(document.getElementById('inThighL').value) || null,
+    cycleStart: document.getElementById('inCycleDate').value,
+    symptoms,
+    alcohol
+  };
+  // TODO: пока нет бэкенда — данные должны уходить в Telegram-бота (Манюню), см. structure.md.
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.sendData(JSON.stringify(payload));
+  } else {
+    console.log('saveInput payload', payload);
+  }
+  showToast('Сохранено ✓');
+}
+
+// ---------- Экран «Календарь» ----------
+const RU_MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const SLEEP_LEVELS = [
+  {min:85, bg:'#DCFCE7', label:'Отлично'},
+  {min:70, bg:'#DBEAFE', label:'Хорошо'},
+  {min:55, bg:'#FEF3C7', label:'Удовлетворительно'},
+  {min:0,  bg:'#FDE2E2', label:'Низкое'}
+];
+function sleepLevel(score){ return SLEEP_LEVELS.find(l => score >= l.min); }
+
+let calYear = today.getFullYear();
+let calMonth = today.getMonth();
+let calSelectedKey = null;
+let calendarInitialized = false;
+
+function daysInMonth(y,m){ return new Date(y, m+1, 0).getDate(); }
+function firstWeekdayMon(y,m){ const dow = new Date(y,m,1).getDay(); return (dow+6)%7; }
+
+function shiftMonth(delta){
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+function renderCalendar(){
+  document.getElementById('calMonthLabel').textContent = `${RU_MONTHS_NOM[calMonth]} ${calYear}`;
+  const total = daysInMonth(calYear, calMonth);
+  const leading = firstWeekdayMon(calYear, calMonth);
+  const todayKey = dateKey(today);
+
+  let cells = '';
+  for (let i = 0; i < leading; i++) cells += '<div class="cal-cell empty"></div>';
+  for (let day = 1; day <= total; day++) {
+    const d = new Date(calYear, calMonth, day);
+    const key = dateKey(d);
+    const rec = HISTORY[key];
+    const isToday = key === todayKey;
+    let bg = '';
+    let icon = '';
+    let dot = '';
+    if (rec && rec.hasRealData) {
+      bg = sleepLevel(rec.sleepScore).bg;
+      if (rec.dayType === 'running') icon = '🏃';
+      else if (rec.dayType === 'strength') icon = '🏋️';
+      if (rec.alcohol && rec.alcohol.length) dot = '<div class="cal-cell-dot"></div>';
+    }
+    const classes = ['cal-cell'];
+    if (isToday) classes.push('today');
+    if (key === calSelectedKey) classes.push('selected');
+    cells += `<div class="${classes.join(' ')}" style="${bg?`background:${bg};`:''}" onclick="selectCalDay('${key}')">
+      ${dot}<span>${day}</span>${icon?`<span class="cal-cell-icon">${icon}</span>`:''}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = cells;
+
+  if (calSelectedKey === null) {
+    calSelectedKey = HISTORY[todayKey] ? todayKey : HIST_DATES[HIST_DATES.length-1];
+  }
+  renderCalDetail(HISTORY[calSelectedKey] ? calSelectedKey : null);
+}
+
+function selectCalDay(key){
+  calSelectedKey = key;
+  renderCalendar();
+}
+
+function renderCalDetail(key){
+  const box = document.getElementById('calDetail');
+  if (!key || !HISTORY[key]) {
+    box.innerHTML = '<div class="metric-foot">Нет данных за этот день.</div>';
+    return;
+  }
+  const rec = HISTORY[key];
+  const d = parseKey(key);
+  const dateLabel = `${d.getDate()} ${RU_MONTHS[d.getMonth()]}, ${RU_WEEKDAYS_FULL[d.getDay()]}`;
+
+  let workoutText = 'Отдых';
+  if (rec.activities && rec.activities.length) {
+    workoutText = rec.activities.map(a => a.type==='running' ? `${a.name} · ${a.km} км` : `${a.name} · ${a.sets} подходов`).join('; ');
+  }
+
+  const sleepLbl = rec.hasRealData ? `${rec.sleepScore} (${sleepLevel(rec.sleepScore).label})` : 'нет данных';
+  const hrLbl = rec.hasRealData ? `${rec.restingHr} уд/мин` : 'нет данных';
+  const alcoholLbl = (rec.alcohol && rec.alcohol.length)
+    ? rec.alcohol.map(a => ({wine:'Вино',beer:'Пиво',spirits:'Крепкий'}[a]||a)).join(', ')
+    : '—';
+
+  box.innerHTML = `
+    <div class="cal-detail-date">${dateLabel}</div>
+    <div class="cal-detail-row"><span class="cal-detail-label">Тренировка</span><span class="cal-detail-val">${workoutText}</span></div>
+    <div class="cal-detail-row"><span class="cal-detail-label">Сон</span><span class="cal-detail-val">${sleepLbl}</span></div>
+    <div class="cal-detail-row"><span class="cal-detail-label">ЧСС в покое</span><span class="cal-detail-val">${hrLbl}</span></div>
+    <div class="cal-detail-row"><span class="cal-detail-label">Вес</span><span class="cal-detail-val">${rec.weight!=null ? rec.weight.toFixed(1)+' кг' : 'нет данных'}</span></div>
+    <div class="cal-detail-row"><span class="cal-detail-label">Алкоголь</span><span class="cal-detail-val">${alcoholLbl}</span></div>
+  `;
+}
+</script>
+</body>
+</html>
