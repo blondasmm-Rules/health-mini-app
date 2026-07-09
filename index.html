@@ -262,14 +262,15 @@
   .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:0.66rem;color:var(--muted);font-weight:600;margin-bottom:6px;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
   .cal-cell{
-    aspect-ratio:1;border-radius:10px;background:#F3F0FF;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;position:relative;font-size:0.72rem;font-weight:700;color:var(--ink);
+    aspect-ratio:1;border-radius:12px;background:#FAFAFE;border:1px solid #EDE9FF;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;position:relative;font-size:0.75rem;font-weight:700;color:var(--ink);
+    transition:box-shadow 0.15s;cursor:pointer;
   }
   .cal-cell.empty{background:transparent;}
-  .cal-cell.today{box-shadow:0 0 0 2px var(--purple-1) inset;}
-  .cal-cell.selected{box-shadow:0 0 0 2px var(--purple-2) inset;}
-  .cal-cell-icon{font-size:0.62rem;margin-top:1px;}
-  .cal-cell-dot{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:#D4537E;}
+  .cal-cell.today{background:var(--purple-1)!important;color:#fff!important;border-color:transparent;box-shadow:0 3px 10px rgba(124,58,237,0.38);}
+  .cal-cell.selected{box-shadow:0 0 0 2px var(--purple-2) inset;background:#F5F0FE;border-color:var(--purple-2);}
+  .cal-cell-icon{font-size:0.7rem;margin-top:2px;line-height:1;}
+  .cal-cell-dot{position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#E11D48;box-shadow:0 1px 3px rgba(225,29,72,0.4);}
   .cal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:0.66rem;color:var(--muted);}
   .cal-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:middle;}
   .cal-detail-date{font-size:0.9rem;font-weight:700;color:var(--purple-1);margin-bottom:8px;}
@@ -553,10 +554,10 @@
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div class="cal-legend">
-      <span><i class="cal-dot" style="background:#DCFCE7"></i>сон отл.</span>
-      <span><i class="cal-dot" style="background:#DBEAFE"></i>хор.</span>
-      <span><i class="cal-dot" style="background:#FEF3C7"></i>удовл.</span>
-      <span><i class="cal-dot" style="background:#FDE2E2"></i>низкое</span>
+      <span><i class="cal-dot" style="background:#EDE9FE;border:1px solid #C4B5FD"></i>сон отл.</span>
+      <span><i class="cal-dot" style="background:#DBEAFE;border:1px solid #93C5FD"></i>хор.</span>
+      <span><i class="cal-dot" style="background:#FEF3C7;border:1px solid #FCD34D"></i>удовл.</span>
+      <span><i class="cal-dot" style="background:#FCE7F3;border:1px solid #F9A8D4"></i>низкое</span>
     </div>
   </div>
 
@@ -1175,10 +1176,10 @@ function saveInput(){
 // ---------- Экран «Календарь» ----------
 const RU_MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const SLEEP_LEVELS = [
-  {min:85, bg:'#DCFCE7', label:'Отлично'},
+  {min:85, bg:'#EDE9FE', label:'Отлично'},
   {min:70, bg:'#DBEAFE', label:'Хорошо'},
   {min:55, bg:'#FEF3C7', label:'Удовлетворительно'},
-  {min:0,  bg:'#FDE2E2', label:'Низкое'}
+  {min:0,  bg:'#FCE7F3', label:'Низкое'}
 ];
 function sleepLevel(score){ return SLEEP_LEVELS.find(l => score >= l.min); }
 
