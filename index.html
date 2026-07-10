@@ -1279,7 +1279,7 @@ function renderCalendar(){
   if (calSelectedKey === null) {
     calSelectedKey = HISTORY[todayKey] ? todayKey : HIST_DATES[HIST_DATES.length-1];
   }
-  renderCalDetail(HISTORY[calSelectedKey] ? calSelectedKey : null);
+  renderCalDetail(calSelectedKey);
 }
 
 function selectCalDay(key){
