@@ -1452,12 +1452,9 @@ function refreshTodayPlan() {
 
 function calSave(dateKey) {
   const manual = loadManual(dateKey);
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(JSON.stringify({ type: 'manual', date: dateKey, ...manual }));
-  }
   showToast('Сохранено ✓');
   if ((dateKey === todayKey || dateKey === tomorrowKey) && manual.workoutType) {
-    setTimeout(refreshTodayPlan, 400);
+    refreshTodayPlan();
   }
 }
 </script>
