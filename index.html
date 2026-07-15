@@ -667,6 +667,12 @@ function workoutName(date){
   if (t === 'running') return 'Бег';
   return 'Активный отдых';
 }
+function effectiveWorkoutName(date){
+  const t = getEffectiveDayType(dateKey(date));
+  if (t === 'strength') { const dow = date.getDay(); return (dow===3||dow===0)?'Ягодицы · Спина':'Ягодицы · Плечи'; }
+  if (t === 'running') return 'Бег';
+  return 'Активный отдых';
+}
 
 const PHASE_META = {
   menstrual:  { name:'Менструальная',  color:'#F43F5E', badge:'Восстановление', desc:'Тело восстанавливается — приоритет мягкая нагрузка, больше отдыха и сна.' },
@@ -759,7 +765,7 @@ if (hasAdj) {
 const wType = getEffectiveDayType(todayKey);
 const wIcons = { strength:'🏋️‍♀️', running:'🏃‍♀️', rest:'🧘‍♀️' };
 document.getElementById('workoutIcon').textContent = wIcons[wType];
-document.getElementById('workoutName').textContent = workoutName(today);
+document.getElementById('workoutName').textContent = effectiveWorkoutName(today);
 document.getElementById('workoutType').textContent = wType==='strength' ? 'Силовая тренировка' : (wType==='running' ? 'Кардио / бег' : 'День отдыха');
 
 const bannerClass = intensityMod === 1 ? 'intensity-green' : (intensityMod === -1 ? 'intensity-yellow' : 'intensity-blue');
@@ -1427,7 +1433,7 @@ function refreshTodayPlan() {
   const wTypeNow = getEffectiveDayType(todayKey);
   const wIcons2 = { strength:'🏋️‍♀️', running:'🏃‍♀️', rest:'🧘‍♀️' };
   document.getElementById('workoutIcon').textContent = wIcons2[wTypeNow];
-  document.getElementById('workoutName').textContent = workoutName(today);
+  document.getElementById('workoutName').textContent = effectiveWorkoutName(today);
   document.getElementById('workoutType').textContent = wTypeNow==='strength' ? 'Силовая тренировка' : (wTypeNow==='running' ? 'Кардио / бег' : 'День отдыха');
   let iMod = (phase==='menstrual'||phase==='luteal') ? -1 : 1;
   if (recoveryScore < 55) iMod = Math.min(iMod, -1);
