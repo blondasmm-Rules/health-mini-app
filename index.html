@@ -1128,6 +1128,24 @@ function switchView(view){
   document.getElementById('navCalendar').classList.toggle('active', view==='calendar');
   document.getElementById('navInput').classList.toggle('active', view==='input');
   if (view === 'calendar' && !calendarInitialized) { calendarInitialized = true; renderCalendar(); }
+  if (view === 'input') {
+    const m = loadManual(dateKey(today));
+    // Restore workout type chip
+    document.getElementById('workoutTypeRow').querySelectorAll('.chip-select').forEach(b => {
+      b.classList.toggle('active', b.dataset.val === m.workoutType);
+    });
+    // Restore alcohol chips
+    const alc = m.alcohol || [];
+    document.getElementById('alcoholRow').querySelectorAll('.chip-select').forEach(b => {
+      b.classList.toggle('active', alc.includes(b.dataset.val));
+    });
+    // Restore symptoms
+    const sym = m.symptoms || [];
+    document.getElementById('symptomsRow').querySelectorAll('.chip-select').forEach(b => {
+      b.classList.toggle('active', sym.includes(b.dataset.val));
+    });
+    if (m.weight) document.getElementById('inWeight').value = m.weight;
+  }
 }
 
 // Замеры тела — периодически (не каждый день), поэтому не завязаны на неделя/месяц:
@@ -1214,13 +1232,17 @@ function saveInput(){
     symptoms,
     alcohol
   };
-  // TODO: пока нет бэкенда — данные должны уходить в Telegram-бота (Манюню), см. structure.md.
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(JSON.stringify(payload));
-  } else {
-    console.log('saveInput payload', payload);
-  }
+  // Сохраняем в localStorage (sendData закрывает приложение и не нужен пока нет бэкенда)
+  const existing = loadManual(dateKey(today));
+  const merged = Object.assign({}, existing);
+  if (payload.workoutType) merged.workoutType = payload.workoutType;
+  if (payload.alcohol && payload.alcohol.length) merged.alcohol = payload.alcohol;
+  if (payload.symptoms && payload.symptoms.length) merged.symptoms = payload.symptoms;
+  if (payload.weight) merged.weight = payload.weight;
+  if (payload.cycleStart) merged.cycleStart = payload.cycleStart;
+  saveManual(dateKey(today), merged);
   showToast('Сохранено ✓');
+  if (payload.workoutType) refreshTodayPlan();
 }
 
 // ---------- Экран «Календарь» ----------
@@ -1283,7 +1305,7 @@ function renderCalendar(){
   document.getElementById('calGrid').innerHTML = cells;
 
   if (calSelectedKey === null) {
-    calSelectedKey = HISTORY[todayKey] ? todayKey : HIST_DATES[HIST_DATES.length-1];
+    calSelectedKey = todayKey;
   }
   renderCalDetail(calSelectedKey);
 }
