@@ -1145,6 +1145,13 @@ function switchView(view){
       b.classList.toggle('active', sym.includes(b.dataset.val));
     });
     if (m.weight) document.getElementById('inWeight').value = m.weight;
+    if (m.bust) document.getElementById('inBust').value = m.bust;
+    if (m.underbust) document.getElementById('inUnderbust').value = m.underbust;
+    if (m.waist) document.getElementById('inWaist').value = m.waist;
+    if (m.belly) document.getElementById('inBelly').value = m.belly;
+    if (m.glutes) document.getElementById('inGlutes').value = m.glutes;
+    if (m.thighR) document.getElementById('inThighR').value = m.thighR;
+    if (m.thighL) document.getElementById('inThighL').value = m.thighL;
   }
 }
 
@@ -1182,14 +1189,16 @@ renderSummary();
 // ---------- Экран «Ввод данных» ----------
 document.getElementById('inputDateLabel').textContent =
   `${RU_WEEKDAYS_FULL[today.getDay()]}, ${today.getDate()} ${RU_MONTHS[today.getMonth()]}`;
-document.getElementById('inWeight').value = Y.weight;
-document.getElementById('inBust').value = 84;
-document.getElementById('inUnderbust').value = 74;
-document.getElementById('inWaist').value = 71;
-document.getElementById('inBelly').value = 82;
-document.getElementById('inGlutes').value = 100;
-document.getElementById('inThighR').value = 56.6;
-document.getElementById('inCycleDate').value = dateKey(LAST_PERIOD);
+{ const _m = loadManual(dateKey(today));
+  document.getElementById('inWeight').value = _m.weight || Y.weight;
+  document.getElementById('inBust').value = _m.bust || 84;
+  document.getElementById('inUnderbust').value = _m.underbust || 74;
+  document.getElementById('inWaist').value = _m.waist || 71;
+  document.getElementById('inBelly').value = _m.belly || 82;
+  document.getElementById('inGlutes').value = _m.glutes || 100;
+  document.getElementById('inThighR').value = _m.thighR || 56.6;
+  document.getElementById('inCycleDate').value = _m.cycleStart || dateKey(LAST_PERIOD);
+}
 
 function setupChipRow(rowId, multi){
   const row = document.getElementById(rowId);
@@ -1239,6 +1248,13 @@ function saveInput(){
   if (payload.alcohol && payload.alcohol.length) merged.alcohol = payload.alcohol;
   if (payload.symptoms && payload.symptoms.length) merged.symptoms = payload.symptoms;
   if (payload.weight) merged.weight = payload.weight;
+  if (payload.bust) merged.bust = payload.bust;
+  if (payload.underbust) merged.underbust = payload.underbust;
+  if (payload.waist) merged.waist = payload.waist;
+  if (payload.belly) merged.belly = payload.belly;
+  if (payload.glutes) merged.glutes = payload.glutes;
+  if (payload.thighR) merged.thighR = payload.thighR;
+  if (payload.thighL) merged.thighL = payload.thighL;
   if (payload.cycleStart) merged.cycleStart = payload.cycleStart;
   saveManual(dateKey(today), merged);
   showToast('Сохранено ✓');
@@ -1290,9 +1306,10 @@ function renderCalendar(){
     const hasAlcohol = (rec && rec.alcohol && rec.alcohol.length) || (manual.alcohol && manual.alcohol.length);
     if (rec && rec.hasRealData) {
       bg = sleepLevel(rec.sleepScore).bg;
-      if (rec.dayType === 'running') icon = '🏃';
-      else if (rec.dayType === 'strength') icon = '🏋️';
     }
+    const effectiveType = manual.workoutType || (rec && rec.dayType) || null;
+    if (effectiveType === 'running') icon = '🏃';
+    else if (effectiveType === 'strength') icon = '🏋️';
     const alcoholIcon = hasAlcohol ? '🍷' : '';
     const classes = ['cal-cell'];
     if (isToday) classes.push('today');
