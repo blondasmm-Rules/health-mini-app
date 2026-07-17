@@ -238,43 +238,10 @@ function fmtPace(sec){const m=Math.floor(sec/60),s=Math.round(sec%60);return `${
 function S(w,r,n){return Array.from({length:n},()=>({w,r}));}
 function Sx(...a){return a.map(([w,r])=>({w,r}));}
 
-let sessions=[
-  {id:"s1",date:"2026-06-01",tpl:"A",survey:"как обычно",
-   garmin:{avgHr:118,maxHr:158,dur:62,kcal:412,load:145,bbStart:78,bbEnd:41,rhr:52,hrv:64,sleep:7.1,stress:34},
-   ex:{1:Sx([70,12],[90,12],[90,12],[90,12]),2:S(40,10,4),3:S(40,8,4),4:S(30,10,3),5:S(20,12,3),6:S(7,14,2),7:S(0,12,3)}},
-  {id:"s2",date:"2026-06-08",tpl:"A",survey:"были силы на больше",
-   garmin:{avgHr:115,maxHr:161,dur:64,kcal:428,load:152,bbStart:82,bbEnd:44,rhr:51,hrv:68,sleep:7.4,stress:30},
-   ex:{1:Sx([80,12],[95,12],[95,12],[95,10]),2:S(42.5,10,4),3:S(45,8,4),4:S(32.5,10,3),5:S(22.5,12,3),6:S(7,15,2),7:S(0,13,3)}},
-  {id:"s3",date:"2026-06-15",tpl:"A",survey:"сделала все на максимум",
-   garmin:{avgHr:113,maxHr:164,dur:66,kcal:445,load:161,bbStart:85,bbEnd:43,rhr:50,hrv:71,sleep:7.6,stress:28},
-   ex:{1:Sx([80,12],[100,12],[100,12],[100,11]),2:S(45,10,4),3:S(47.5,8,4),4:S(35,10,3),5:S(25,12,3),6:S(8,14,2),7:S(0,15,3)}},
-  {id:"s4",date:"2026-06-03",tpl:"B",survey:"как обычно",
-   garmin:{avgHr:112,maxHr:150,dur:58,kcal:365,load:128,bbStart:74,bbEnd:45,rhr:52,hrv:63,sleep:6.9,stress:36},
-   ex:{8:S(100,12,4),9:S(10,15,3),10:S(16,12,3),11:S(25,12,3),12:S(45,15,3),13:S(6,12,3),14:S(15,12,3)}},
-  {id:"s5",date:"2026-06-10",tpl:"B",survey:"были силы на больше",
-   garmin:{avgHr:110,maxHr:153,dur:60,kcal:380,load:134,bbStart:80,bbEnd:47,rhr:51,hrv:66,sleep:7.2,stress:31},
-   ex:{8:S(110,12,4),9:S(12,15,3),10:S(18,12,3),11:S(27.5,12,3),12:S(50,15,3),13:S(7,12,3),14:S(17.5,12,3)}},
-  {id:"s6",date:"2026-06-05",tpl:"C",survey:"хотелось закончить раньше",
-   garmin:{avgHr:120,maxHr:160,dur:68,kcal:455,load:158,bbStart:70,bbEnd:36,rhr:53,hrv:60,sleep:6.6,stress:40},
-   ex:{15:S(22.5,14,4),16:S(10,14,4),17:S(22.5,12,3),18:S(30,14,3),19:S(10,18,3),20:S(15,14,3),6:S(7,15,3),21:S(0,40,3)}},
-  {id:"s7",date:"2026-06-12",tpl:"C",survey:"как обычно",
-   garmin:{avgHr:117,maxHr:162,dur:70,kcal:470,load:165,bbStart:76,bbEnd:38,rhr:52,hrv:64,sleep:7.0,stress:35},
-   ex:{15:S(25,14,4),16:S(12,14,4),17:S(25,12,3),18:S(32.5,14,3),19:S(12,18,3),20:S(17.5,14,3),6:S(7,16,3),21:S(0,45,3)}},
-  {id:"s8",date:"2026-06-19",tpl:"C",survey:"сделала все на максимум",
-   garmin:{avgHr:115,maxHr:165,dur:71,kcal:482,load:172,bbStart:83,bbEnd:39,rhr:50,hrv:69,sleep:7.5,stress:29},
-   ex:{15:S(25,15,4),16:S(14,14,4),17:S(27.5,12,3),18:S(35,14,3),19:S(12,20,3),20:S(20,14,3),6:S(8,15,3),21:S(0,50,3)}},
-  // ---- Бег (кардио) ----
-  {id:"r1",date:"2026-06-07",tpl:"RUN",survey:"как обычно",got:true,
-   run:{dist:6.0,dur:38,paceSec:380,avgHr:132,maxHr:148,z2:30,cadence:168,elev:45,kcal:372,te:3.2,bbStart:80,bbEnd:58,vo2:41,recovery:18}},
-  {id:"r2",date:"2026-06-14",tpl:"RUN",survey:"были силы на больше",got:true,
-   run:{dist:6.5,dur:40,paceSec:369,avgHr:129,maxHr:150,z2:34,cadence:170,elev:48,kcal:398,te:3.4,bbStart:82,bbEnd:57,vo2:42,recovery:16}},
-  {id:"r3",date:"2026-06-21",tpl:"RUN",survey:"сделала все на максимум",got:true,
-   run:{dist:7.0,dur:42,paceSec:360,avgHr:127,maxHr:151,z2:37,cadence:172,elev:50,kcal:425,te:3.5,bbStart:84,bbEnd:58,vo2:43,recovery:15}},
-];
-let sesSeq=100;
-// explicit exercise order per session (JS numeric object keys can't preserve order)
+let sessions=[];
+let sesSeq=1;
 sessions.forEach(s=>{if(!s.order)s.order=(tpl(s.tpl)?.ex||Object.keys(s.ex).map(Number)).filter(id=>s.ex[id]);});
-let cycle={start:"2026-05-25",len:28};
+let cycle={start:"2026-07-03",len:28};
 let dayAnswers={};
 
 /* ===== UTILS ===== */
