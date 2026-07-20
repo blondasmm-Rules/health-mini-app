@@ -241,7 +241,7 @@ function Sx(...a){return a.map(([w,r])=>({w,r}));}
 let sessions=[];
 let sesSeq=1;
 sessions.forEach(s=>{if(!s.order)s.order=(tpl(s.tpl)?.ex||Object.keys(s.ex).map(Number)).filter(id=>s.ex[id]);});
-let cycle={start:"2026-07-03",len:28};
+let cycle={start:"2026-07-01",len:26};
 let dayAnswers={};
 
 /* ===== UTILS ===== */
@@ -741,6 +741,11 @@ try{const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand
 
 /* INIT */
 load();
+// Принудительно обновляем цикл из данных Garmin (игнорируем сохранённое в localStorage)
+cycle.start="2026-07-01";cycle.len=26;
+// Восстанавливаем defSets для шаблона A если загружен из старого localStorage
+const _tplA=templates.find(t=>t.id==="A");
+if(_tplA&&!_tplA.defSets)_tplA.defSets={1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},5:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}};
 renderCalendar();renderStats();
 // автосохранение: периодически и при сворачивании/закрытии
 setInterval(save,2000);
