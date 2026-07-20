@@ -501,7 +501,7 @@ async function getGarminData(sid){
   const btn=document.getElementById(`getGarminBtn_${sid}`);
   if(btn){btn.disabled=true;btn.textContent='⌚ Загружаю…';}
   try{
-    const r=await fetch(`http://localhost:5055/api/garmin/sync?date=${s.date}&token=blonda_health_2026`);
+    const r=await fetch(`https://somerset-bags-film-fool.trycloudflare.com/api/garmin/sync?date=${s.date}&token=blonda_health_2026`);
     const d=await r.json();
     if(!d.ok){if(btn){btn.disabled=false;btn.textContent='📡 Получить данные из Garmin';}alert('Ошибка Garmin: '+d.error);return;}
     const RUN_T=['running','trail_running'];
@@ -561,7 +561,7 @@ async function garminSync(sid){
   if(!el)return;
   el.style.display='block';el.textContent='⌚ Загружаю данные с часов…';
   try{
-    const r=await fetch(`http://localhost:5055/api/garmin/sync?date=${s.date}&token=blonda_health_2026`);
+    const r=await fetch(`https://somerset-bags-film-fool.trycloudflare.com/api/garmin/sync?date=${s.date}&token=blonda_health_2026`);
     const d=await r.json();
     if(!d.ok){el.textContent='Ошибка: '+d.error;return;}
     const STRENGTH=['strength_training','weight_training'];
