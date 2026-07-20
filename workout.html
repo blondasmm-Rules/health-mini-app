@@ -222,13 +222,14 @@ let exercises=[
   {id:19,name:"Отведение бедра в кроссовере",group:"ягодицы"},
   {id:20,name:"Французский жим",group:"руки"},
   {id:21,name:"Планка",group:"пресс"},
+  {id:22,name:"Кик бэк (разгибание на ягодицы)",group:"ягодицы"},
 ];
 let exSeq=100;
 
 let templates=[
-  {id:"A",name:"Ягодицы+спина 1",color:"#9b7ef0",type:"strength",ex:[1,2,3,4,5,6,7],defSets:{1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},5:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}}},
-  {id:"B",name:"Ягодицы+плечи",color:"#f48fbe",type:"strength",ex:[8,9,10,11,12,13,14]},
-  {id:"C",name:"Ягодицы+спина 2",color:"#6faef0",type:"strength",ex:[15,16,17,18,19,20,6,21]},
+  {id:"A",name:"Ягодицы+спина 1",color:"#9b7ef0",type:"strength",ex:[1,2,3,4,22,6,7],defSets:{1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},22:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}}},
+  {id:"B",name:"Среда — квадр+плечи",color:"#f48fbe",type:"strength",ex:[8,9,10,11,12,13,14,7],defSets:{8:{n:4,goal:"10–12 повт",hint:"подбор"},9:{n:3,goal:"12–15 повт",hint:"10–12 кг"},10:{n:3,goal:"10–12 повт/ногу",hint:"16 кг"},11:{n:3,goal:"12 повт",hint:"25 кг"},12:{n:3,goal:"15 повт",hint:"45–50 кг"},13:{n:3,goal:"10–12 повт",hint:"6–7 кг"},14:{n:3,goal:"12 повт",hint:"подбор"},7:{n:3,goal:"макс",hint:"без веса"}}},
+  {id:"C",name:"Пятница — ягодицы+спина",color:"#6faef0",type:"strength",ex:[15,16,17,18,19,20,6,21],defSets:{15:{n:4,goal:"12–15 повт",hint:"22,5–25 кг"},16:{n:4,goal:"12–15 повт",hint:"10 кг"},17:{n:3,goal:"12 повт/ногу",hint:"22,5–25 кг"},18:{n:3,goal:"12–15 повт",hint:"подбор"},19:{n:3,goal:"15–20 повт",hint:"подбор"},20:{n:3,goal:"12–15 повт",hint:"подбор"},6:{n:3,goal:"15 повт",hint:"7 кг"},21:{n:3,goal:"30–45 сек",hint:"планка"}}},
   {id:"RUN",name:"Бег",color:"#5cc98a",type:"cardio",ex:[]},
 ];
 function sessType(s){return tpl(s.tpl)?.type||"strength";}
@@ -744,9 +745,13 @@ try{const tg=window.Telegram&&window.Telegram.WebApp;if(tg){tg.ready();tg.expand
 load();
 // Принудительно обновляем цикл из данных Garmin (игнорируем сохранённое в localStorage)
 cycle.start="2026-07-01";cycle.len=26;
-// Восстанавливаем defSets для шаблона A если загружен из старого localStorage
-const _tplA=templates.find(t=>t.id==="A");
-if(_tplA&&!_tplA.defSets)_tplA.defSets={1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},5:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}};
+// Принудительно обновляем шаблоны из кода (перезаписываем упражнения и defSets из localStorage)
+const _DS={
+  A:{ex:[1,2,3,4,22,6,7],ds:{1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},22:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}}},
+  B:{ex:[8,9,10,11,12,13,14,7],ds:{8:{n:4,goal:"10–12 повт",hint:"подбор"},9:{n:3,goal:"12–15 повт",hint:"10–12 кг"},10:{n:3,goal:"10–12 повт/ногу",hint:"16 кг"},11:{n:3,goal:"12 повт",hint:"25 кг"},12:{n:3,goal:"15 повт",hint:"45–50 кг"},13:{n:3,goal:"10–12 повт",hint:"6–7 кг"},14:{n:3,goal:"12 повт",hint:"подбор"},7:{n:3,goal:"макс",hint:"без веса"}}},
+  C:{ex:[15,16,17,18,19,20,6,21],ds:{15:{n:4,goal:"12–15 повт",hint:"22,5–25 кг"},16:{n:4,goal:"12–15 повт",hint:"10 кг"},17:{n:3,goal:"12 повт/ногу",hint:"22,5–25 кг"},18:{n:3,goal:"12–15 повт",hint:"подбор"},19:{n:3,goal:"15–20 повт",hint:"подбор"},20:{n:3,goal:"12–15 повт",hint:"подбор"},6:{n:3,goal:"15 повт",hint:"7 кг"},21:{n:3,goal:"30–45 сек",hint:"планка"}}}
+};
+["A","B","C"].forEach(id=>{const t=templates.find(x=>x.id===id);if(t){t.ex=_DS[id].ex;t.defSets=_DS[id].ds;}});
 renderCalendar();renderStats();
 // автосохранение: периодически и при сворачивании/закрытии
 setInterval(save,2000);
