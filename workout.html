@@ -226,7 +226,7 @@ let exercises=[
 let exSeq=100;
 
 let templates=[
-  {id:"A",name:"Ягодицы+спина 1",color:"#9b7ef0",type:"strength",ex:[1,2,3,4,5,6,7]},
+  {id:"A",name:"Ягодицы+спина 1",color:"#9b7ef0",type:"strength",ex:[1,2,3,4,5,6,7],defSets:{1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},5:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}}},
   {id:"B",name:"Ягодицы+плечи",color:"#f48fbe",type:"strength",ex:[8,9,10,11,12,13,14]},
   {id:"C",name:"Ягодицы+спина 2",color:"#6faef0",type:"strength",ex:[15,16,17,18,19,20,6,21]},
   {id:"RUN",name:"Бег",color:"#5cc98a",type:"cardio",ex:[]},
@@ -349,7 +349,7 @@ function lastSetsFor(exId,tplId,beforeDate){
 }
 function startFromTemplate(tplId,dateStr){
   const t=tpl(tplId),exObj={};
-  t.ex.forEach(id=>{const p=lastSetsFor(id,tplId,dateStr);exObj[id]=p?p.map(s=>({...s})):[{w:"",r:""}];});
+  t.ex.forEach(id=>{const p=lastSetsFor(id,tplId,dateStr);if(p){exObj[id]=p.map(s=>({...s}));}else{const ds=t.defSets&&t.defSets[id];exObj[id]=Array.from({length:ds?ds.n:1},()=>({w:"",r:""}));}});
   const s={id:"s"+(sesSeq++),date:dateStr,tpl:tplId,name:t.name,ex:exObj,order:[...t.ex],done:{},survey:null,draft:true};
   sessions.push(s);openSession(s.id);
 }
@@ -544,6 +544,8 @@ function renderSessionBody(sid){
     const e=ex(id),done=s.done[id],open=openExId===id;
     const prev=lastSetsFor(id,s.tpl,s.date);
     const rec=prev?`Прошлый раз: ${prev.map(p=>`${fmt(p.w)}×${p.r}`).join(", ")}`:"Нет прошлых данных";
+    const ds=tpl(s.tpl)?.defSets?.[id];
+    const goal=ds?`<div class="rec" style="color:var(--lav);font-weight:700">📋 Цель: ${ds.n}×${ds.goal}${ds.hint?` · ${ds.hint}`:''}</div>`:'';
     const sets=s.ex[id].map((set,i)=>`
       <div class="set-row">
         <div class="n">${i+1}</div>
@@ -559,6 +561,7 @@ function renderSessionBody(sid){
         ${arrows}
       </div>
       <div class="ex-body">
+        ${goal}
         <div class="rec">${rec}</div>
         <div class="set-cap"><span></span><span>вес, кг</span><span>повторы</span></div>
         ${sets}
@@ -747,3 +750,4 @@ window.addEventListener('beforeunload',save);
 </script>
 </body>
 </html>
+
