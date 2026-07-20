@@ -490,7 +490,7 @@ function openCardioSession(sid){
     </div>
     <div style="padding:0 18px 4px"><button class="chip-btn" style="color:var(--red)" onclick="deleteSession('${sid}')">🗑 Удалить тренировку</button></div>
     <div class="full-body">${body}</div>
-    <div class="full-foot"><button class="btn primary" onclick="finishWorkout('${sid}')">Завершить тренировку</button></div>
+    <div class="full-foot"><button class="btn ghost" style="border:2px solid var(--lav);color:var(--lav)" onclick="finishWorkout('${sid}')">Сохранить тренировку</button></div>
   </div>`;
 }
 function getGarminData(sid){
@@ -518,7 +518,7 @@ function openSession(sid){
     <div style="padding:0 18px 4px;display:flex;gap:8px"><button id="reorderBtn" class="chip-btn" onclick="toggleReorder()">⇅ Изменить порядок</button><button class="chip-btn" style="color:var(--red)" onclick="deleteSession('${sid}')">🗑 Удалить тренировку</button></div>
     <div class="full-body" id="sessBody"></div>
     <div class="full-foot">
-      <button class="btn primary" onclick="finishWorkout('${sid}')">Завершить тренировку</button>
+      <button class="btn ghost" style="border:2px solid var(--lav);color:var(--lav)" onclick="finishWorkout('${sid}')">Сохранить тренировку</button>
     </div>
   </div>`;
   renderSessionBody(sid);
