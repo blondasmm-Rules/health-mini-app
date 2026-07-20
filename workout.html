@@ -463,7 +463,10 @@ const RUN_METRICS=[
   ["VO₂max (оценка)","vo2","",true],
   ["Время восстановл.","recovery","ч",false],
 ];
-function runVal(r,k){return k==='bbUse'?(r.bbStart-r.bbEnd):r[k];}
+function runVal(r,k){
+  if(k==='bbUse'){return(r.bbStart!=null&&r.bbEnd!=null)?r.bbStart-r.bbEnd:null;}
+  return r[k]??null;
+}
 function runDisp(k,v){return k==='paceSec'?fmtPace(v):fmt(v);}
 function openCardioSession(sid){
   activeSid=sid;
@@ -473,14 +476,14 @@ function openCardioSession(sid){
     body=`<div style="text-align:center;padding:30px 10px">
       <div style="font-size:54px;margin-bottom:6px">🏃‍♀️</div>
       <div style="color:var(--ink2);font-size:15px;line-height:1.5;margin-bottom:24px">Пробежка записана на часах Garmin.<br>Нажми, чтобы подтянуть данные тренировки.</div>
-      <button class="btn primary" onclick="getGarminData('${sid}')">📡 Получить данные из Garmin</button>
+      <button class="btn primary" id="getGarminBtn_${sid}" onclick="getGarminData('${sid}')">📡 Получить данные из Garmin</button>
     </div>`;
   }else{
     const r=s.run;
     body=`<div class="metrics" style="grid-template-columns:1fr 1fr">
-      ${RUN_METRICS.map(([lab,k,u])=>`<div style="background:var(--field);border-radius:13px;padding:12px 14px"><div style="color:var(--ink2);font-size:11px;font-weight:600">${lab}${u?` · ${u}`:''}</div><div style="font-weight:800;font-size:19px;margin-top:3px">${runDisp(k,runVal(r,k))}</div></div>`).join("")}
+      ${RUN_METRICS.map(([lab,k,u])=>{const v=runVal(r,k);if(v==null||isNaN(v))return'';return`<div style="background:var(--field);border-radius:13px;padding:12px 14px"><div style="color:var(--ink2);font-size:11px;font-weight:600">${lab}${u?` · ${u}`:''}</div><div style="font-weight:800;font-size:19px;margin-top:3px">${runDisp(k,v)}</div></div>`;}).join("")}
     </div>
-    <button class="btn ghost sm" style="margin-top:12px" onclick="getGarminData('${sid}')">↻ Обновить из Garmin</button>`;
+    <button class="btn ghost sm" style="margin-top:12px" id="getGarminBtn_${sid}" onclick="getGarminData('${sid}')">↻ Обновить из Garmin</button>`;
   }
   $("#overlayRoot").innerHTML=`
   <div class="full">
@@ -493,13 +496,40 @@ function openCardioSession(sid){
     <div class="full-foot"><button class="btn ghost" style="border:2px solid var(--lav);color:var(--lav)" onclick="finishWorkout('${sid}')">Сохранить тренировку</button></div>
   </div>`;
 }
-function getGarminData(sid){
+async function getGarminData(sid){
   const s=sessions.find(x=>x.id===sid);
-  // ДЕМО: имитация ответа Garmin. Позже подключим реальную синхронизацию через агента.
-  const dist=+(5.5+Math.random()*2).toFixed(1);
-  const paceSec=Math.round(355+Math.random()*40);
-  s.run={dist,dur:Math.round(dist*paceSec/60),paceSec,avgHr:Math.round(126+Math.random()*10),maxHr:Math.round(148+Math.random()*8),z2:Math.round(28+Math.random()*12),cadence:Math.round(166+Math.random()*8),elev:Math.round(40+Math.random()*20),kcal:Math.round(dist*62),te:+(3+Math.random()*0.8).toFixed(1),bbStart:Math.round(78+Math.random()*8),bbEnd:Math.round(54+Math.random()*8),vo2:Math.round(40+Math.random()*4),recovery:Math.round(14+Math.random()*8)};
-  s.got=true;openCardioSession(sid);
+  const btn=document.getElementById(`getGarminBtn_${sid}`);
+  if(btn){btn.disabled=true;btn.textContent='⌚ Загружаю…';}
+  try{
+    const r=await fetch(`http://localhost:5055/api/garmin/sync?date=${s.date}&token=blonda_health_2026`);
+    const d=await r.json();
+    if(!d.ok){if(btn){btn.disabled=false;btn.textContent='📡 Получить данные из Garmin';}alert('Ошибка Garmin: '+d.error);return;}
+    const RUN_T=['running','trail_running'];
+    const acts=d.activities||[];
+    const run=acts.find(a=>RUN_T.includes(a.type));
+    if(!run){if(btn){btn.disabled=false;}alert('Пробежек в Garmin за этот день не найдено');return;}
+    const spd=run.avg_speed;
+    const paceSec=(spd&&spd>0)?Math.round(1000/spd):null;
+    s.run={
+      dist:run.distance_m?+(run.distance_m/1000).toFixed(2):null,
+      dur:run.duration_min||null,
+      paceSec,
+      avgHr:run.avg_hr?Math.round(run.avg_hr):null,
+      maxHr:run.max_hr?Math.round(run.max_hr):null,
+      z2:null,
+      cadence:run.avg_cadence?Math.round(run.avg_cadence):null,
+      elev:run.elevation_gain?Math.round(run.elevation_gain):null,
+      kcal:run.calories||null,
+      te:run.aerobic_te?+(run.aerobic_te).toFixed(1):null,
+      bbStart:null,bbEnd:null,
+      vo2:run.vo2max?Math.round(run.vo2max):null,
+      recovery:null
+    };
+    s.got=true;save();openCardioSession(sid);
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='📡 Получить данные из Garmin';}
+    alert('Нет связи с сервером');
+  }
 }
 function openSession(sid){
   const s0=sessions.find(x=>x.id===sid);
