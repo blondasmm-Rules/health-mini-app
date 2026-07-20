@@ -747,6 +747,8 @@ load();
 cycle.start="2026-07-01";cycle.len=26;
 // Добавляем упражнения из кода если localStorage перезаписал их старой версией
 [{id:22,name:"Кик бэк (разгибание на ягодицы)",group:"ягодицы"}].forEach(e=>{if(!exercises.find(x=>x.id===e.id))exercises.push(e);});
+// Оставляем только Garmin-сессии + сегодняшние реальные тренировки
+sessions=sessions.filter(s=>s._garmin||s.date>=TODAY);
 // Принудительно обновляем шаблоны из кода (перезаписываем упражнения и defSets из localStorage)
 const _DS={
   A:{ex:[1,2,3,4,22,6,7],ds:{1:{n:4,goal:"6–8 повт",hint:"80–90 кг"},2:{n:4,goal:"6–8 повт",hint:"40–45 кг"},3:{n:4,goal:"6–8 повт",hint:"тяжело"},4:{n:3,goal:"6–8 повт",hint:"35–40 кг"},22:{n:3,goal:"10–12 повт",hint:"20–25 кг"},6:{n:2,goal:"12–15 повт",hint:"7 кг"},7:{n:3,goal:"макс",hint:"без веса"}}},
