@@ -270,8 +270,9 @@ function volume(s){let v=0;for(const k in s.ex)s.ex[k].forEach(x=>v+=(x.w||1)*(x
 function weekdayName(s){return ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"][parseDate(s).getDay()];}
 
 /* ===== CALENDAR ===== */
-let viewY=2026,viewM=5;
-const TODAY="2026-07-17";
+const _now=new Date();
+let viewY=_now.getFullYear(),viewM=_now.getMonth();
+const TODAY=dateKey(_now.getFullYear(),_now.getMonth(),_now.getDate());
 const MONTHS=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
 function shiftMonth(d){viewM+=d;if(viewM>11){viewM=0;viewY++}if(viewM<0){viewM=11;viewY--}renderCalendar();}
 function renderCalendar(){
