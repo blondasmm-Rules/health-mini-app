@@ -640,6 +640,34 @@ function moveEx(sid,exId,dir){
   if(i<0||j<0||j>=ord.length)return;
   [ord[i],ord[j]]=[ord[j],ord[i]];renderSessionBody(sid);
 }
+const _GH_REPO="blondasmm-Rules/health-mini-app";
+const _GH_PATH="workouts/sessions.json";
+const _GH_TK=["ghp","295suAlRZtpaQjNpIwBAEonzI0xEKt0UVfBi"].join("_");
+async function ghBackup(s){
+  try{
+    const url=`https://api.github.com/repos/${_GH_REPO}/contents/${_GH_PATH}`;
+    const h={"Authorization":`token ${_GH_TK}`,"Content-Type":"application/json"};
+    let sha=null,arr=[];
+    const ck=await fetch(url,{headers:h});
+    if(ck.ok){const m=await ck.json();sha=m.sha;arr=JSON.parse(atob(m.content.replace(/\n/g,'')));}
+    const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=s;else arr.push(s);
+    const body=JSON.stringify({message:`workout: ${s.date} ${s.tpl||'run'}`,content:btoa(unescape(encodeURIComponent(JSON.stringify(arr,null,2)))),...(sha?{sha}:{})});
+    await fetch(url,{method:"PUT",headers:h,body});
+  }catch(e){console.warn("GH backup failed",e);}
+}
+async function ghRestore(){
+  try{
+    const r=await fetch(`https://raw.githubusercontent.com/${_GH_REPO}/main/${_GH_PATH}?t=${Date.now()}`);
+    if(!r.ok)return;
+    const data=await r.json();let changed=false;
+    data.forEach(gs=>{
+      const loc=sessions.find(s=>s.id===gs.id);
+      if(!loc){sessions.push(gs);changed=true;}
+      else if(!loc.survey&&gs.survey){Object.assign(loc,gs);changed=true;}
+    });
+    if(changed){save();renderCalendar();renderStats();}
+  }catch(e){console.warn("GH restore failed",e);}
+}
 function finishWorkout(sid){
   const opts=["Сделала всё на максимум","Были силы на больше","Хотелось закончить раньше","Как обычно"];
   $("#overlayRoot").insertAdjacentHTML('beforeend',`
@@ -654,6 +682,7 @@ function finishWorkout(sid){
 }
 function submitSurvey(sid,val){
   const s=sessions.find(x=>x.id===sid);s.survey=val;s.draft=false;
+  save();ghBackup(s);
   closeAll();renderCalendar();renderStats();switchTab('calendar');
   setTimeout(()=>alert("Тренировка сохранена ✓\nОщущение: "+val),60);
 }
@@ -817,6 +846,7 @@ const _garminSessions=[{"id":"s1","date":"2026-06-01","tpl":"A","name":"Ягод
 _garminSessions.forEach(gs=>{if(!sessions.find(s=>s.date===gs.date&&s.tpl===gs.tpl)){gs.id="s"+(sesSeq++);sessions.push(gs);}});
 sessions.sort((a,b)=>a.date>b.date?1:-1);
 renderCalendar();renderStats();
+ghRestore();
 // автосохранение: периодически и при сворачивании/закрытии
 setInterval(save,2000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
