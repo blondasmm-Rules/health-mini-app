@@ -3,7 +3,7 @@
     "id": "s135",
     "date": "2026-07-20",
     "tpl": "A",
-    "name": "Силовая тренировка",
+    "name": "Ð¡Ð¸Ð»Ð¾Ð²Ð°Ñ ÑÑÐµÐ½Ð¸ÑÐ¾Ð²ÐºÐ°",
     "ex": {
       "1": [
         {
@@ -150,7 +150,7 @@
       "7": true,
       "22": true
     },
-    "survey": "Были силы на больше",
+    "survey": "ÐÑÐ»Ð¸ ÑÐ¸Ð»Ñ Ð½Ð° Ð±Ð¾Ð»ÑÑÐµ",
     "draft": false,
     "_garmin": {
       "duration_min": 51,
@@ -158,5 +158,39 @@
       "avg_hr": 117,
       "max_hr": 146
     }
+  },
+  {
+    "id": "s124",
+    "date": "2026-07-17",
+    "tpl": "RUN",
+    "name": "Анивский район - Базовая выносливость",
+    "ex": {},
+    "order": [],
+    "done": {},
+    "survey": "Были силы на больше",
+    "draft": false,
+    "_garmin": {
+      "duration_min": 45,
+      "calories": 417,
+      "distance_m": 6441,
+      "avg_hr": 148
+    },
+    "run": {
+      "dist": 6.44,
+      "dur": 45,
+      "paceSec": 428,
+      "avgHr": 148,
+      "maxHr": 160,
+      "z2": null,
+      "cadence": 153,
+      "elev": 90,
+      "kcal": 417,
+      "te": 3.4,
+      "bbStart": null,
+      "bbEnd": null,
+      "vo2": null,
+      "recovery": null
+    },
+    "got": true
   }
 ]
