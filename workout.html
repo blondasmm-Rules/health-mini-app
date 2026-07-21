@@ -771,21 +771,33 @@ function sparkline(pts,fmtFn,caption){
   const dots=pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="4.5" fill="#8065e6"/><text x="${X(i).toFixed(1)}" y="${(Y(p.y)-11).toFixed(1)}" fill="#3d3757" font-size="13" text-anchor="middle" font-weight="800">${fmtFn(p.y)}</text><text x="${X(i).toFixed(1)}" y="${h-9}" fill="#8b86a3" font-size="10" text-anchor="middle">${p.x}</text>`).join("");
   return `<div class="spark"><svg viewBox="0 0 ${w} ${h}" width="100%"><path d="${line}" fill="none" stroke="#9b7ef0" stroke-width="3"/>${dots}</svg><div style="color:var(--ink3);font-size:11px;text-align:center;padding-bottom:4px">${caption}</div></div>`;
 }
+function runFromGarmin(s){
+  const g=s._garmin||{};
+  const distKm=g.distance_m?+(g.distance_m/1000).toFixed(2):null;
+  const paceSec=distKm&&g.duration_min?Math.round(g.duration_min*60/distKm):null;
+  return {dist:distKm,dur:g.duration_min||null,paceSec,avgHr:g.avg_hr?Math.round(g.avg_hr):null,maxHr:g.max_hr?Math.round(g.max_hr):null,z2:null,cadence:null,elev:null,kcal:g.calories||null,te:null,bbStart:null,bbEnd:null,vo2:null,recovery:null};
+}
+function sessionRun(s){return s.run||runFromGarmin(s);}
 function openCardioStats(tid){
   const t=tpl(tid);
-  const arr=sessions.filter(s=>s.tpl===tid&&!s.draft&&s.run).sort((a,b)=>a.date.localeCompare(b.date));
-  const first=arr[0],last=arr[arr.length-1],best=arr.reduce((b,s)=>s.run.paceSec<b.run.paceSec?s:b,arr[0]);
+  const arr=sessions.filter(s=>s.tpl===tid&&!s.draft&&(s.run||s._garmin)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!arr.length)return;
+  const first=arr[0],last=arr[arr.length-1];
+  const withPace=arr.filter(s=>sessionRun(s).paceSec);
+  const best=withPace.length?withPace.reduce((b,s)=>sessionRun(s).paceSec<sessionRun(b).paceSec?s:b,withPace[0]):last;
   const cols=[["Первая",first],["Лучшая",best],["Последняя",last]];
   const dd=s=>`${parseDate(s.date).getDate()}.${String(parseDate(s.date).getMonth()+1).padStart(2,'0')}`;
   let mh=`<div class="metrics"><div class="mh"></div>${cols.map(c=>`<div class="mh">${c[0]}<br><small style="color:var(--ink3);font-weight:600">${dd(c[1])}</small></div>`).join("")}`;
   RUN_METRICS.forEach(([lab,k,u,dir])=>{
     mh+=`<div class="mlabel">${lab}${u?` · ${u}`:''}</div>`;
     cols.forEach((c,idx)=>{
-      const val=runVal(c[1].run,k);let dl="";
+      const run=sessionRun(c[1]);
+      const val=runVal(run,k);let dl="";
+      if(val==null||isNaN(val)){mh+=`<div class="mval" style="color:var(--ink3)">—</div>`;return;}
       if(idx===2&&dir!==null){
-        const d=val-runVal(first.run,k);
-        if(d!==0){
-          const good=(dir===true)?d>0:(d<0);
+        const fv=runVal(sessionRun(first),k);
+        if(fv!=null&&val!==fv){
+          const d=val-fv;const good=(dir===true)?d>0:(d<0);
           const ds=k==='paceSec'?`${d>0?'+':'−'}${fmtPace(Math.abs(d))}`:`${d>0?'+':''}${fmt(d)}`;
           dl=`<small class="${good?'up':'down'}">${ds}</small>`;
         }
@@ -800,13 +812,13 @@ function openCardioStats(tid){
     <div class="full-body">
       <div class="label" style="margin-top:6px">Данные с часов Garmin</div>
       ${mh}
-      <div style="color:var(--ink3);font-size:11px;margin:8px 4px 0">«Лучшая» — по самому быстрому темпу. ↑/↓ — изменение «Последняя» vs «Первая». Данные тестовые до синхронизации.</div>
+      <div style="color:var(--ink3);font-size:11px;margin:8px 4px 0">«Лучшая» — по самому быстрому темпу. ↑/↓ — изменение «Последняя» vs «Первая».</div>
       <div class="label">Динамика</div>
-      ${sparkline(arr.map(s=>({x:dd(s),y:s.run.paceSec})),fmtPace,"Средний темп, мин/км (ниже — быстрее)")}
+      ${sparkline(arr.filter(s=>sessionRun(s).paceSec).map(s=>({x:dd(s),y:sessionRun(s).paceSec})),fmtPace,"Средний темп, мин/км (ниже — быстрее)")}
       <div style="height:10px"></div>
-      ${sparkline(arr.map(s=>({x:dd(s),y:s.run.dist})),fmt,"Дистанция, км")}
+      ${sparkline(arr.filter(s=>sessionRun(s).dist).map(s=>({x:dd(s),y:sessionRun(s).dist})),fmt,"Дистанция, км")}
       <div style="height:10px"></div>
-      ${sparkline(arr.map(s=>({x:dd(s),y:s.run.avgHr})),fmt,"Средний пульс, уд/мин (ниже при том же темпе — форма растёт)")}
+      ${sparkline(arr.filter(s=>sessionRun(s).avgHr).map(s=>({x:dd(s),y:sessionRun(s).avgHr})),fmt,"Средний пульс, уд/мин")}
     </div>
   </div>`;
 }
@@ -844,6 +856,8 @@ const _DS={
 // Данные из Garmin (июнь-июль 2026) — добавляем только новые сессии
 const _garminSessions=[{"id":"s1","date":"2026-06-01","tpl":"A","name":"Ягодицы и спина пн","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":87,"calories":434}},{"id":"s2","date":"2026-06-03","tpl":"B","name":"Ягодицы и плечи","ex":{"8":[{"w":"","r":""}],"9":[{"w":"","r":""}],"10":[{"w":"","r":""}],"11":[{"w":"","r":""}],"12":[{"w":"","r":""}],"13":[{"w":"","r":""}],"14":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[8,9,10,11,12,13,14,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":93,"calories":516}},{"id":"s3","date":"2026-06-05","tpl":"C","name":"Я+С пт","ex":{"15":[{"w":"","r":""}],"16":[{"w":"","r":""}],"17":[{"w":"","r":""}],"18":[{"w":"","r":""}],"19":[{"w":"","r":""}],"20":[{"w":"","r":""}],"6":[{"w":"","r":""}],"21":[{"w":"","r":""}]},"order":[15,16,17,18,19,20,6,21],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":81,"calories":469}},{"id":"s4","date":"2026-06-08","tpl":"A","name":"Ягодицы и спина пн","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":63,"calories":354}},{"id":"s5","date":"2026-06-10","tpl":"B","name":"Ягодицы и плечи","ex":{"8":[{"w":"","r":""}],"9":[{"w":"","r":""}],"10":[{"w":"","r":""}],"11":[{"w":"","r":""}],"12":[{"w":"","r":""}],"13":[{"w":"","r":""}],"14":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[8,9,10,11,12,13,14,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":63,"calories":391}},{"id":"s6","date":"2026-06-11","tpl":"RUN","name":"Анивский район - Увеличение показателя VO2 Max.","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":50,"calories":410,"distance_m":6571,"avg_hr":146.0}},{"id":"s7","date":"2026-06-15","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":79,"calories":414}},{"id":"s8","date":"2026-06-16","tpl":"RUN","name":"Анивский район - Темповая тренировка","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":24,"calories":219,"distance_m":3411,"avg_hr":149.0}},{"id":"s9","date":"2026-06-17","tpl":"B","name":"Силовая тренировка","ex":{"8":[{"w":"","r":""}],"9":[{"w":"","r":""}],"10":[{"w":"","r":""}],"11":[{"w":"","r":""}],"12":[{"w":"","r":""}],"13":[{"w":"","r":""}],"14":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[8,9,10,11,12,13,14,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":74,"calories":468}},{"id":"s10","date":"2026-06-20","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":71,"calories":429}},{"id":"s11","date":"2026-06-21","tpl":"RUN","name":"Thalang - Базовая выносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":37,"calories":340,"distance_m":5186,"avg_hr":153.0}},{"id":"s12","date":"2026-06-22","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":77,"calories":490}},{"id":"s13","date":"2026-06-24","tpl":"RUN","name":"Thalang - Базовая выносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":42,"calories":369,"distance_m":5777,"avg_hr":148.0}},{"id":"s14","date":"2026-06-25","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":84,"calories":390}},{"id":"s15","date":"2026-06-27","tpl":"RUN","name":"Thalang - Базовая выносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":42,"calories":393,"distance_m":6192,"avg_hr":149.0}},{"id":"s16","date":"2026-07-01","tpl":"B","name":"Силовая тренировка","ex":{"8":[{"w":"","r":""}],"9":[{"w":"","r":""}],"10":[{"w":"","r":""}],"11":[{"w":"","r":""}],"12":[{"w":"","r":""}],"13":[{"w":"","r":""}],"14":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[8,9,10,11,12,13,14,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":63,"calories":365}},{"id":"s17","date":"2026-07-04","tpl":"RUN","name":"Thalang - Базовая выносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":35,"calories":327,"distance_m":5109,"avg_hr":147.0}},{"id":"s18","date":"2026-07-05","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":86,"calories":414}},{"id":"s19","date":"2026-07-06","tpl":"RUN","name":"Thalang - Кардиовыносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":40,"calories":389,"distance_m":6086,"avg_hr":155.0}},{"id":"s20","date":"2026-07-08","tpl":"B","name":"Силовая тренировка","ex":{"8":[{"w":"","r":""}],"9":[{"w":"","r":""}],"10":[{"w":"","r":""}],"11":[{"w":"","r":""}],"12":[{"w":"","r":""}],"13":[{"w":"","r":""}],"14":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[8,9,10,11,12,13,14,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":88,"calories":524}},{"id":"s21","date":"2026-07-09","tpl":"RUN","name":"Thalang Бег","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":41,"calories":400,"distance_m":6150,"avg_hr":156.0}},{"id":"s22","date":"2026-07-11","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":87,"calories":457}},{"id":"s23","date":"2026-07-12","tpl":"RUN","name":"Thalang - Базовая выносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":34,"calories":327,"distance_m":5035,"avg_hr":151.0}},{"id":"s24","date":"2026-07-16","tpl":"C","name":"Я+С пт","ex":{"15":[{"w":"","r":""}],"16":[{"w":"","r":""}],"17":[{"w":"","r":""}],"18":[{"w":"","r":""}],"19":[{"w":"","r":""}],"20":[{"w":"","r":""}],"6":[{"w":"","r":""}],"21":[{"w":"","r":""}]},"order":[15,16,17,18,19,20,6,21],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":76,"calories":383}},{"id":"s25","date":"2026-07-17","tpl":"RUN","name":"Анивский район - Базовая выносливость","ex":{},"order":[],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":45,"calories":417,"distance_m":6441,"avg_hr":148.0}},{"id":"s26","date":"2026-07-20","tpl":"A","name":"Силовая тренировка","ex":{"1":[{"w":"","r":""}],"2":[{"w":"","r":""}],"3":[{"w":"","r":""}],"4":[{"w":"","r":""}],"22":[{"w":"","r":""}],"6":[{"w":"","r":""}],"7":[{"w":"","r":""}]},"order":[1,2,3,4,22,6,7],"done":{},"survey":null,"draft":false,"_garmin":{"duration_min":51,"calories":278,"avg_hr":117,"max_hr":146}}];
 _garminSessions.forEach(gs=>{if(!sessions.find(s=>s.date===gs.date&&s.tpl===gs.tpl)){gs.id="s"+(sesSeq++);sessions.push(gs);}});
+// Очищаем рандомные run-данные (признак: z2 !== null — из старого демо-кода)
+sessions.filter(s=>s.run&&s.run.z2!==null).forEach(s=>{delete s.run;delete s.got;});
 sessions.sort((a,b)=>a.date>b.date?1:-1);
 renderCalendar();renderStats();
 ghRestore();
