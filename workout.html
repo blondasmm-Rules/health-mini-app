@@ -630,7 +630,7 @@ function renderSessionBody(sid){
   }).join("");
 }
 function toggleEx(id){openExId=openExId===id?null:id;renderSessionBody(activeSid);}
-function editSet(sid,exId,i,f,v){const s=sessions.find(x=>x.id===sid);s.ex[exId][i][f]=v===""?"":(f==='w'?parseFloat(v):parseInt(v));}
+function editSet(sid,exId,i,f,v){const s=sessions.find(x=>x.id===sid);s.ex[exId][i][f]=v===""?"":(f==='w'?parseFloat(v.replace(',','.')):parseInt(v));}
 function addSet(sid,exId){const s=sessions.find(x=>x.id===sid);const a=s.ex[exId];const last=a[a.length-1]||{w:"",r:""};a.push({w:last.w,r:last.r});openExId=exId;renderSessionBody(sid);}
 function saveEx(sid,exId){const s=sessions.find(x=>x.id===sid);s.done[exId]=!s.done[exId];renderSessionBody(sid);}
 function moveEx(sid,exId,dir){
