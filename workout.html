@@ -561,13 +561,27 @@ function addExerciseToSession(sid){
   const avail=exercises.filter(e=>!used.has(e.id));
   if(!avail.length){alert("Все упражнения уже добавлены в тренировку");return;}
   const byGroup={};avail.forEach(e=>{(byGroup[e.group]=byGroup[e.group]||[]).push(e);});
-  let html=`<div class="overlay"><div class="sheet" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto"><div class="grip"></div><div style="font-size:18px;font-weight:800;margin:0 4px 14px">Добавить упражнение</div>`;
+  let html=`<div class="overlay"><div class="sheet" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto"><div class="grip"></div><div style="font-size:18px;font-weight:800;margin:0 4px 10px">Добавить упражнение</div>
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;margin-bottom:6px">Своё упражнение</div>
+    <div style="display:flex;gap:8px">
+      <input id="customExInput" type="text" placeholder="Название упражнения" style="flex:1;border:none;background:var(--field);border-radius:12px;padding:10px 14px;font-size:14px;font-family:inherit" />
+      <button class="btn primary" style="padding:10px 14px;font-size:13px;white-space:nowrap" onclick="addCustomEx('${sid}')">Добавить</button>
+    </div>
+  </div>`;
   Object.entries(byGroup).forEach(([grp,exs])=>{
     html+=`<div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;margin:10px 0 4px">${grp}</div>`;
     exs.forEach(e=>{html+=`<button class="survey-opt" style="text-align:left" onclick="confirmAddEx('${sid}',${e.id})">${GROUP_ICON[e.group]||'•'} ${e.name}</button>`;});
   });
   html+=`<button class="survey-opt" style="color:var(--ink3);margin-top:4px" onclick="closeTopOverlay()">Отмена</button></div></div>`;
   $("#overlayRoot").insertAdjacentHTML('beforeend',html);
+}
+function addCustomEx(sid){
+  const name=(document.getElementById('customExInput').value||'').trim();
+  if(!name)return;
+  const newId=Math.max(...exercises.map(e=>e.id),100)+1;
+  exercises.push({id:newId,name,group:'другое'});
+  save();confirmAddEx(sid,newId);
 }
 function confirmAddEx(sid,exId){
   const s=sessions.find(x=>x.id===sid);
