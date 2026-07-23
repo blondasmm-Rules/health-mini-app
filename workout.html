@@ -545,7 +545,7 @@ function openSession(sid){
       </div>
       <button class="icobtn" onclick="closeSession('${sid}')">✕</button>
     </div>
-    <div style="padding:0 18px 4px;display:flex;gap:8px;flex-wrap:wrap"><button id="reorderBtn" class="chip-btn" onclick="toggleReorder()">⇅ Изменить порядок</button><button class="chip-btn" onclick="garminSync('${sid}')">⌚ Garmin</button><button class="chip-btn" style="color:var(--red)" onclick="deleteSession('${sid}')">🗑 Удалить тренировку</button></div>
+    <div style="padding:0 18px 4px;display:flex;gap:8px;flex-wrap:wrap"><button id="reorderBtn" class="chip-btn" onclick="toggleReorder()">⇅ Изменить порядок</button><button class="chip-btn" onclick="garminSync('${sid}')">⌚ Garmin</button><button class="chip-btn" onclick="addExerciseToSession('${sid}')">＋ Упражнение</button><button class="chip-btn" style="color:var(--red)" onclick="deleteSession('${sid}')">🗑 Удалить тренировку</button></div>
     <div id="garminInfo_${sid}" style="display:none;margin:4px 18px 0;background:#f0ebff;border-radius:14px;padding:12px 14px;font-size:13px;color:var(--ink2)"></div>
     <div class="full-body" id="sessBody"></div>
     <div class="full-foot">
@@ -555,6 +555,28 @@ function openSession(sid){
   renderSessionBody(sid);
 }
 function toggleReorder(){reorderMode=!reorderMode;$("#reorderBtn").classList.toggle('on',reorderMode);renderSessionBody(activeSid);}
+function addExerciseToSession(sid){
+  const s=sessions.find(x=>x.id===sid);
+  const used=new Set(Object.keys(s.ex).map(Number));
+  const avail=exercises.filter(e=>!used.has(e.id));
+  if(!avail.length){alert("Все упражнения уже добавлены в тренировку");return;}
+  const byGroup={};avail.forEach(e=>{(byGroup[e.group]=byGroup[e.group]||[]).push(e);});
+  let html=`<div class="overlay"><div class="sheet" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto"><div class="grip"></div><div style="font-size:18px;font-weight:800;margin:0 4px 14px">Добавить упражнение</div>`;
+  Object.entries(byGroup).forEach(([grp,exs])=>{
+    html+=`<div style="font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;margin:10px 0 4px">${grp}</div>`;
+    exs.forEach(e=>{html+=`<button class="survey-opt" style="text-align:left" onclick="confirmAddEx('${sid}',${e.id})">${GROUP_ICON[e.group]||'•'} ${e.name}</button>`;});
+  });
+  html+=`<button class="survey-opt" style="color:var(--ink3);margin-top:4px" onclick="closeTopOverlay()">Отмена</button></div></div>`;
+  $("#overlayRoot").insertAdjacentHTML('beforeend',html);
+}
+function confirmAddEx(sid,exId){
+  const s=sessions.find(x=>x.id===sid);
+  s.ex[exId]=[{w:"",r:""}];
+  s.order=(s.order||Object.keys(s.ex).map(Number).filter(k=>k!==exId));
+  s.order.push(exId);
+  closeTopOverlay();openExId=exId;renderSessionBody(sid);
+}
+function closeTopOverlay(){const overlays=$("#overlayRoot").querySelectorAll('.overlay');if(overlays.length)overlays[overlays.length-1].remove();}
 async function garminSync(sid){
   const s=sessions.find(x=>x.id===sid);
   const el=document.getElementById(`garminInfo_${sid}`);
