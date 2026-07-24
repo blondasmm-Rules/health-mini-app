@@ -749,16 +749,19 @@ function openStatsDetail(tid){
   const t=tpl(tid);
   const arr=sessions.filter(s=>s.tpl===tid&&!s.draft).sort((a,b)=>a.date.localeCompare(b.date));
   const first=arr[0],last=arr[arr.length-1],best=arr.reduce((b,s)=>volume(s)>volume(b)?s:b,arr[0]);
-  const cols=[["Первая",first],["Лучшая",best],["Последняя",last]];
+  const cols=[['Первая',first],['Лучшая',best],['Последняя',last]];
   const dd=s=>`${parseDate(s.date).getDate()}.${String(parseDate(s.date).getMonth()+1).padStart(2,'0')}`;
-  const M=[["Средний пульс","avgHr","уд/мин",false],["Макс пульс","maxHr","уд/мин",false],["Длительность","dur","мин",true],["Актив. калории","kcal","ккал",true],["Трен. нагрузка","load","",true],["Body Battery","bbUse","расход",false],["HRV (вар-сть)","hrv","мс",true],["Пульс покоя","rhr","уд/мин",false],["Сон накануне","sleep","ч",true],["Стресс средний","stress","",false]];
-  const gv=(s,k)=>k==='bbUse'?(s.garmin.bbStart-s.garmin.bbEnd):s.garmin[k];
+  const M=[['Средний пульс','avg_hr','уд/мин',false],['Макс пульс','max_hr','уд/мин',false],['Длительность','duration_min','мин',true],['Калории','calories','ккал',true]];
+  const gv=(s,k)=>{const g=s._garmin||{};return g[k]??null;};
+  const fv=v=>(v===null||v===undefined||isNaN(v))?'—':fmt(v);
   let mh=`<div class="metrics"><div class="mh"></div>${cols.map(c=>`<div class="mh">${c[0]}<br><small style="color:var(--ink3);font-weight:600">${dd(c[1])}</small></div>`).join("")}`;
   M.forEach(([lab,k,u,up])=>{
+    const vals=cols.map(c=>gv(c[1],k));
+    if(vals.every(v=>v===null))return;
     mh+=`<div class="mlabel">${lab}${u?` · ${u}`:''}</div>`;
-    cols.forEach((c,idx)=>{const val=gv(c[1],k);let dl="";if(idx===2){const d=val-gv(first,k);if(d!==0){const good=up?d>0:d<0;dl=`<small class="${good?'up':'down'}">${d>0?'+':''}${fmt(d)}</small>`;}}mh+=`<div class="mval">${fmt(val)}${dl}</div>`;});
+    cols.forEach((c,idx)=>{const val=gv(c[1],k);let dl='';if(idx===2&&val!==null){const fvv=gv(first,k);if(fvv!==null){const d=val-fvv;if(d!==0){const good=up?d>0:d<0;dl=`<small class="${good?'up':'down'}">${d>0?'+':''}${fmt(d)}</small>`;}}}mh+=`<div class="mval">${fv(val)}${dl}</div>`;});
   });
-  mh+=`</div>`;
+  mh+='</div>';
   const exHtml=(last.order||Object.keys(last.ex).map(Number)).filter(id=>last.ex[id]).map(id=>`
     <div class="ex" id="stat-ex-${id}">
       <div class="ex-head" onclick="toggleStatEx(${id},'${tid}')">
@@ -768,13 +771,12 @@ function openStatsDetail(tid){
       </div>
       <div class="ex-body" id="stat-body-${id}"></div>
     </div>`).join("");
-  $("#overlayRoot").innerHTML=`
+  $('#overlayRoot').innerHTML=`
   <div class="full">
     <div class="full-head"><div><h2>${t.name}</h2><div class="sub" style="color:var(--ink2);font-size:13px;margin-top:3px">${arr.length} тренировки · сравнение</div></div><button class="icobtn" onclick="closeAll()">✕</button></div>
     <div class="full-body">
       <div class="label" style="margin-top:6px">Данные с часов Garmin</div>
       ${mh}
-      <div style="color:var(--ink3);font-size:11px;margin:8px 4px 0">↑/↓ — изменение «Последняя» vs «Первая». Значения тестовые до синхронизации с Garmin.</div>
       <div class="label">Упражнения — вес и повторы</div>
       ${exHtml}
     </div>
@@ -789,17 +791,17 @@ function toggleStatEx(id,tid){
 }
 function renderStatEx(id,tid){
   const arr=sessions.filter(s=>s.tpl===tid&&!s.draft&&s.ex[id]).sort((a,b)=>a.date.localeCompare(b.date));
-  const first=arr[0],last=arr[arr.length-1],best=arr.reduce((b,s)=>topWeight(s.ex[id])>topWeight(b.ex[id])?s:b,arr[0]);
+  const tw=s=>topWeight((s.ex||{})[id]||[]);const first=arr[0],last=arr[arr.length-1],best=arr.reduce((b,s)=>tw(s)>tw(b)?s:b,arr[0]);
   const cols=[["Первая",first],["Лучшая",best],["Последняя",last]];
   const dd=s=>`${parseDate(s.date).getDate()}.${String(parseDate(s.date).getMonth()+1).padStart(2,'0')}`;
   const v=statView[id];
   let inner=`<div class="toggle"><button class="${v==='table'?'sel':''}" onclick="statView[${id}]='table';renderStatEx(${id},'${tid}')">Таблица</button><button class="${v==='chart'?'sel':''}" onclick="statView[${id}]='chart';renderStatEx(${id},'${tid}')">График</button></div>`;
   if(v==='table'){
     inner+=`<table class="cmp"><tr><th></th>${cols.map(c=>`<th>${c[0]}<br><small style="color:var(--ink3);font-weight:500">${dd(c[1])}</small></th>`).join("")}</tr>
-      <tr><td style="color:var(--ink2);font-size:12px">Рабочий вес</td>${cols.map(c=>`<td><span class="bignum">${fmt(topWeight(c[1].ex[id]))}</span></td>`).join("")}</tr>
-      <tr><td style="color:var(--ink2);font-size:12px">Подходы</td>${cols.map(c=>`<td class="set">${c[1].ex[id].map(s=>`${fmt(s.w)}×${s.r}`).join("<br>")}</td>`).join("")}</tr></table>`;
+      <tr><td style="color:var(--ink2);font-size:12px">Рабочий вес</td>${cols.map(c=>`<td><span class="bignum">${tw(c[1])>0?fmt(tw(c[1])):'—'}</span></td>`).join("")}</tr>
+      <tr><td style="color:var(--ink2);font-size:12px">Подходы</td>${cols.map(c=>`<td class="set">${(c[1].ex[id]||[]).filter(s=>s.w||s.r).map(s=>`${fmt(s.w)}×${s.r}`).join("<br>")||'—'}</td>`).join("")}</tr></table>`;
   }else{
-    inner+=sparkline(arr.map(s=>({x:dd(s),y:topWeight(s.ex[id])})));
+    inner+=sparkline(arr.filter(s=>(s.ex||{})[id]).map(s=>({x:dd(s),y:tw(s)})));
   }
   $(`#stat-body-${id}`).innerHTML=inner;
 }
