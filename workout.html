@@ -719,6 +719,7 @@ function finishWorkout(sid){
       <div style="font-size:22px;font-weight:800;margin:0 4px 6px">Как прошла тренировка?</div>
       <div style="color:var(--ink2);font-size:14px;margin:0 4px 18px">Отметь ощущение — учтём в статистике и рекомендациях по циклу.</div>
       ${opts.map(o=>`<button class="survey-opt" onclick="submitSurvey('${sid}','${o}')">${o}</button>`).join("")}
+      <button class="btn ghost" style="margin-top:14px;color:var(--ink2);font-size:15px" onclick="closeTopOverlay()">← Вернуться к тренировке</button>
     </div>
   </div>`);
 }
