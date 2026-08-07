@@ -685,7 +685,7 @@ async function ghBackup(s){
     const h={"Authorization":`token ${_GH_TK}`,"Content-Type":"application/json"};
     let sha=null,arr=[];
     const ck=await fetch(url,{headers:h});
-    if(ck.ok){const m=await ck.json();sha=m.sha;arr=JSON.parse(atob(m.content.replace(/\n/g,'')));}
+    if(ck.ok){const m=await ck.json();sha=m.sha;const _b=atob(m.content.replace(/\n/g,''));const _u=new Uint8Array(_b.length);for(let i=0;i<_b.length;i++)_u[i]=_b.charCodeAt(i);arr=JSON.parse(new TextDecoder('utf-8').decode(_u));}
     const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=s;else arr.push(s);
     const body=JSON.stringify({message:`workout: ${s.date} ${s.tpl||'run'}`,content:btoa(unescape(encodeURIComponent(JSON.stringify(arr,null,2)))),...(sha?{sha}:{})});
     await fetch(url,{method:"PUT",headers:h,body});
@@ -697,15 +697,16 @@ async function ghRestore(){
     if(!r.ok)return;
     const data=await r.json();let changed=false;
     data.forEach(gs=>{
+      const _fixName=s=>{const g=_garminSessions.find(x=>x.date===s.date&&x.tpl===s.tpl);if(g)s.name=g.name;};
       const byId=sessions.find(s=>s.id===gs.id);
-      if(byId){if(!byId.survey&&gs.survey){Object.assign(byId,gs);changed=true;}return;}
+      if(byId){if(!byId.survey&&gs.survey){Object.assign(byId,gs);_fixName(byId);changed=true;}return;}
       const byDate=sessions.find(s=>s.date===gs.date&&s.tpl===gs.tpl);
       if(byDate){
         const bkHasW=gs.ex&&Object.values(gs.ex).some(sets=>sets.some(s=>s.w));
         const lcHasW=byDate.ex&&Object.values(byDate.ex).some(sets=>sets.some(s=>s.w));
-        if(bkHasW&&!lcHasW){Object.assign(byDate,gs);changed=true;}
-        else if(!byDate.survey&&gs.survey){Object.assign(byDate,gs);changed=true;}
-      } else {sessions.push(gs);changed=true;}
+        if(bkHasW&&!lcHasW){Object.assign(byDate,gs);_fixName(byDate);changed=true;}
+        else if(!byDate.survey&&gs.survey){Object.assign(byDate,gs);_fixName(byDate);changed=true;}
+      } else {_fixName(gs);sessions.push(gs);changed=true;}
     });
     if(changed){save();renderCalendar();renderStats();}
   }catch(e){console.warn("GH restore failed",e);}
