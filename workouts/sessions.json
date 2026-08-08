@@ -896,5 +896,30 @@
     "got": true,
     "survey": "Были силы на больше",
     "draft": false
+  },
+  {
+    "id": "s46",
+    "date": "2026-08-09",
+    "tpl": "RUN",
+    "name": "Бег",
+    "run": {
+      "dist": 6.01,
+      "dur": 44,
+      "paceSec": 447,
+      "avgHr": 143,
+      "maxHr": 158,
+      "z2": null,
+      "cadence": 173,
+      "elev": 78,
+      "kcal": 385,
+      "te": 3.2,
+      "bbStart": null,
+      "bbEnd": null,
+      "vo2": null,
+      "recovery": null
+    },
+    "got": true,
+    "survey": "Были силы на больше",
+    "draft": false
   }
 ]
