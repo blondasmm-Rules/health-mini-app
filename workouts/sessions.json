@@ -1316,7 +1316,22 @@
       "22": true,
       "106": true
     },
-    "survey": "Были силы на больше",
-    "draft": false
+    "survey": "Сделала всё на максимум",
+    "draft": false,
+    "_garmin": {
+      "aerobic_te": 1.399999976158142,
+      "avg_cadence": null,
+      "avg_hr": 111,
+      "avg_speed": 0,
+      "calories": 328,
+      "distance_m": 0,
+      "duration_min": 71,
+      "elevation_gain": null,
+      "max_hr": 142,
+      "name": "Силовая тренировка",
+      "start_time": "2026-08-17 13:40:58",
+      "type": "strength_training",
+      "vo2max": null
+    }
   }
 ]
