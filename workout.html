@@ -661,6 +661,7 @@ function renderSessionBody(sid){
         ${sets}
         <div class="addset" onclick="addSet('${sid}',${id})">＋ Добавить подход</div>
         <div class="ex-save"><button class="btn ${done?'ghost':'accent'} sm" onclick="saveEx('${sid}',${id})">${done?'Сохранено ✓ — изменить':'Сохранить упражнение'}</button></div>
+        <div style="text-align:center;margin-top:6px"><button class="btn ghost sm" style="color:#e53935;font-size:13px" onclick="removeExFromSession('${sid}',${id})">✕ Убрать упражнение</button></div>
       </div>
     </div>`;
   }).join("");
@@ -669,6 +670,15 @@ function toggleEx(id){openExId=openExId===id?null:id;renderSessionBody(activeSid
 function editSet(sid,exId,i,f,v){const s=sessions.find(x=>x.id===sid);s.ex[exId][i][f]=v===""?"":(f==='w'?parseFloat(v.replace(',','.')):parseInt(v));}
 function addSet(sid,exId){const s=sessions.find(x=>x.id===sid);const a=s.ex[exId];const last=a[a.length-1]||{w:"",r:""};a.push({w:last.w,r:last.r});openExId=exId;renderSessionBody(sid);}
 function saveEx(sid,exId){const s=sessions.find(x=>x.id===sid);s.done[exId]=!s.done[exId];renderSessionBody(sid);}
+function removeExFromSession(sid,exId){
+  if(!confirm('Убрать упражнение из этой тренировки?'))return;
+  const s=sessions.find(x=>x.id===sid);
+  delete s.ex[exId];
+  if(s.order)s.order=s.order.filter(id=>id!==exId);
+  if(s.done)delete s.done[exId];
+  if(openExId===exId)openExId=null;
+  save();renderSessionBody(sid);
+}
 function moveEx(sid,exId,dir){
   const s=sessions.find(x=>x.id===sid);
   const ord=s.order||(s.order=Object.keys(s.ex).map(Number));
