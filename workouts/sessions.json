@@ -1333,5 +1333,30 @@
       "type": "strength_training",
       "vo2max": null
     }
+  },
+  {
+    "id": "s55",
+    "date": "2026-08-18",
+    "tpl": "RUN",
+    "name": "Бег",
+    "run": {
+      "dist": 6.02,
+      "dur": 42,
+      "paceSec": 428,
+      "avgHr": 146,
+      "maxHr": 157,
+      "z2": null,
+      "cadence": 170,
+      "elev": 74,
+      "kcal": 392,
+      "te": 3.4,
+      "bbStart": null,
+      "bbEnd": null,
+      "vo2": null,
+      "recovery": null
+    },
+    "got": true,
+    "survey": "Сделала всё на максимум",
+    "draft": false
   }
 ]
