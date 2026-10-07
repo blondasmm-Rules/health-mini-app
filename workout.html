@@ -621,10 +621,10 @@ async function garminSync(sid){
 }
 function closeSession(sid){
   const s=sessions.find(x=>x.id===sid);
-  // выкинуть пустой черновик, чтобы не плодить дубли
   if(s&&s.draft){
     const empty=sessType(s)==='cardio'?!s.got:!Object.values(s.done||{}).some(Boolean);
-    if(empty)sessions=sessions.filter(x=>x.id!==sid);
+    if(empty){sessions=sessions.filter(x=>x.id!==sid);save();closeAll();renderCalendar();renderStats();return;}
+    s.draft=false;save();ghBackup(s);
   }
   closeAll();renderCalendar();renderStats();
 }
