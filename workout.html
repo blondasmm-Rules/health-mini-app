@@ -183,6 +183,9 @@
   <!-- STATS -->
   <div id="tab-stats" class="screen hidden">
     <div class="top"><div><h1>Статистика</h1><div class="sub">Сравнение тренировок и прогресс</div></div></div>
+    <div style="padding:0 18px 8px;">
+      <button id="syncAllBtn" class="btn ghost" style="border:2px solid var(--lav);color:var(--lav);font-size:14px;padding:12px" onclick="ghBackupAll()">☁️ Синхронизировать всё</button>
+    </div>
     <div style="padding:0 18px;" id="statsList"></div>
   </div>
 
@@ -730,7 +733,8 @@ function finishWorkout(sid){
       <div style="font-size:22px;font-weight:800;margin:0 4px 6px">Как прошла тренировка?</div>
       <div style="color:var(--ink2);font-size:14px;margin:0 4px 18px">Отметь ощущение — учтём в статистике и рекомендациях по циклу.</div>
       ${opts.map(o=>`<button class="survey-opt" onclick="submitSurvey('${sid}','${o}')">${o}</button>`).join("")}
-      <button class="btn ghost" style="margin-top:14px;color:var(--ink2);font-size:15px" onclick="closeTopOverlay()">← Вернуться к тренировке</button>
+      <button class="btn ghost" style="margin-top:8px;color:var(--lav);font-size:15px;font-weight:700" onclick="skipSurvey('${sid}')">Сохранить без опроса →</button>
+      <button class="btn ghost" style="margin-top:6px;color:var(--ink2);font-size:15px" onclick="closeTopOverlay()">← Вернуться к тренировке</button>
     </div>
   </div>`);
 }
@@ -739,6 +743,30 @@ function submitSurvey(sid,val){
   save();ghBackup(s);
   closeAll();renderCalendar();renderStats();switchTab('calendar');
   setTimeout(()=>alert("Тренировка сохранена ✓\nОщущение: "+val),60);
+}
+function skipSurvey(sid){
+  const s=sessions.find(x=>x.id===sid);s.draft=false;
+  save();ghBackup(s);
+  closeAll();renderCalendar();renderStats();switchTab('calendar');
+  setTimeout(()=>alert("Тренировка сохранена ✓"),60);
+}
+async function ghBackupAll(){
+  const btn=document.getElementById('syncAllBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Синхронизирую…';}
+  try{
+    const url=`https://api.github.com/repos/${_GH_REPO}/contents/${_GH_PATH}`;
+    const h={"Authorization":`token ${_GH_TK}`,"Content-Type":"application/json"};
+    let sha=null,arr=[];
+    const ck=await fetch(url,{headers:h});
+    if(ck.ok){const m=await ck.json();sha=m.sha;const _b=atob(m.content.replace(/\n/g,''));const _u=new Uint8Array(_b.length);for(let i=0;i<_b.length;i++)_u[i]=_b.charCodeAt(i);arr=JSON.parse(new TextDecoder('utf-8').decode(_u));}
+    const real=sessions.filter(s=>!s.draft&&(Object.values(s.ex||{}).some(sets=>sets.some(st=>st.w||st.r))));
+    let added=0;
+    real.forEach(s=>{const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=s;else{arr.push(s);added++;}});
+    const body=JSON.stringify({message:`sync all: ${real.length} sessions`,content:btoa(unescape(encodeURIComponent(JSON.stringify(arr,null,2)))),...(sha?{sha}:{})});
+    await fetch(url,{method:"PUT",headers:h,body});
+    alert(`Синхронизировано ✓\nЗагружено сессий: ${real.length} (новых: ${added})`);
+  }catch(e){alert("Ошибка синхронизации: "+e.message);}
+  finally{if(btn){btn.disabled=false;btn.textContent='☁️ Синхронизировать всё';}}
 }
 
 /* ===== STATS ===== */
