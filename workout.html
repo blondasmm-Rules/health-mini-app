@@ -764,6 +764,12 @@ async function ghBackupAll(){
     real.forEach(s=>{const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=s;else{arr.push(s);added++;}});
     const body=JSON.stringify({message:`sync all: ${real.length} sessions`,content:btoa(unescape(encodeURIComponent(JSON.stringify(arr,null,2)))),...(sha?{sha}:{})});
     await fetch(url,{method:"PUT",headers:h,body});
+    // also backup exercises list (includes custom ones)
+    const exUrl=`https://api.github.com/repos/${_GH_REPO}/contents/workouts/exercises.json`;
+    let exSha=null;const exCk=await fetch(exUrl,{headers:h});
+    if(exCk.ok){const em=await exCk.json();exSha=em.sha;}
+    const exBody=JSON.stringify({message:`sync exercises`,content:btoa(unescape(encodeURIComponent(JSON.stringify(exercises,null,2)))),...(exSha?{sha:exSha}:{})});
+    await fetch(exUrl,{method:"PUT",headers:h,body:exBody});
     alert(`Синхронизировано ✓\nЗагружено сессий: ${real.length} (новых: ${added})`);
   }catch(e){alert("Ошибка синхронизации: "+e.message);}
   finally{if(btn){btn.disabled=false;btn.textContent='☁️ Синхронизировать всё';}}
